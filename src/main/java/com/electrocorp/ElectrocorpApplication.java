@@ -1,11 +1,9 @@
-package com.electrocorp.electrocorp;
+package com.electrocorp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication(scanBasePackages = "com.electrocorp")
+@SpringBootApplication
 public class ElectrocorpApplication {
 
     public static void main(String[] args) {
