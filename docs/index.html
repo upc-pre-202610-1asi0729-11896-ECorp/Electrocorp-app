@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -71,7 +71,7 @@
             </div>
             <div class="card stat">
                 <h2 data-i18n="centro.saving">Ahorro</h2>
-                <p>18%</p>
+                <p id="stat-saving">18%</p>
             </div>
             <div class="card stat">
                 <h2 data-i18n="centro.devices">Dispositivos</h2>
@@ -96,10 +96,10 @@
         <h1 data-i18n="analitica.title">Analítica Avanzada</h1>
 
         <div class="cards">
-            <div class="card stat"><h2 data-i18n="analitica.peak">Hora pico</h2><p>7 PM</p></div>
-            <div class="card stat"><h2 data-i18n="analitica.topDay">Día mayor consumo</h2><p data-i18n="days.tue">Martes</p></div>
-            <div class="card stat"><h2 data-i18n="analitica.avg">Promedio diario</h2><p>10.5 kWh</p></div>
-            <div class="card stat"><h2 data-i18n="analitica.forecast">Predicción</h2><p>S/ 180</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.peak">Hora pico</h2><p id="stat-peak">7 PM</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.topDay">Día mayor consumo</h2><p id="stat-topday">Mar</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.avg">Promedio diario</h2><p id="stat-avg">10.5 kWh</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.forecast">Predicción</h2><p id="stat-forecast">S/ 180</p></div>
         </div>
 
         <div class="card chart-wrapper"><canvas id="chartBar"></canvas></div>
