@@ -282,6 +282,8 @@ function toggleDevice(id) {
     d.active = !d.active;
     saveDevices();
     renderDevices();
+    // ── LÓGICA DE NEGOCIO: el costo estimado cambia según dispositivos activos ──
+    recalcCentroStats();
     notify(`${d.name}: ${d.active ? t('dispositivos.activated') : t('dispositivos.deactivated')}`);
 }
 
@@ -291,6 +293,8 @@ function deleteDevice(id) {
     devices = devices.filter(x => x.id !== id);
     saveDevices();
     renderDevices();
+    // ── LÓGICA DE NEGOCIO: recalcular al eliminar ──
+    recalcCentroStats();
     notify(t('msg.deleted', { n: d.name }));
 }
 
@@ -301,6 +305,8 @@ function addDevicePrompt() {
     devices.push(d);
     saveDevices();
     renderDevices();
+    // ── LÓGICA DE NEGOCIO: recalcular al agregar ──
+    recalcCentroStats();
     notify(t('msg.added', { n: d.name }));
 }
 
@@ -365,6 +371,9 @@ function closeModal(save) {
         saveHistory();
         renderHistory();
         addPointToLineChart(value);
+        // ── LÓGICA DE NEGOCIO: recalcular todo al agregar consumo ──
+        recalcCentroStats();
+        recalcAnalitica();
         notify(t('msg.saved', { v: value }));
     }
     input.value = '';
@@ -463,6 +472,9 @@ function randomizeChart() {
     if (!lineChart) return;
     lineChart.data.datasets[0].data = Array.from({length: 7}, () => Math.round(5 + Math.random() * 20));
     lineChart.update();
+    // ── LÓGICA DE NEGOCIO: actualizar analítica y centro con los datos nuevos ──
+    recalcAnalitica();
+    recalcCentroStats();
     notify(t('msg.simulated'));
 }
 
@@ -491,6 +503,101 @@ document.addEventListener('keydown', e => {
     }
 });
 
+/* ================================================================
+   LÓGICA DE NEGOCIO — Recálculo de métricas
+   ================================================================ */
+
+/**
+ * Tarifa estimada por kWh en soles (Perú, referencia Osinergmin).
+ * Se puede ajustar fácilmente desde aquí.
+ */
+const TARIFA_SOL_KWH = 0.45;
+
+/**
+ * Consumo base por dispositivo activo (kWh/mes estimado).
+ * Permite que encender/apagar dispositivos afecte el gasto estimado.
+ */
+const CONSUMO_DEVICE_KWH = 8;
+
+/**
+ * Horas pico simuladas para el análisis (índices en el array de 7 días).
+ * Se detecta según cuál día/hora tiene el valor más alto.
+ */
+const PEAK_HOURS = ['6 AM', '8 AM', '12 PM', '3 PM', '7 PM', '9 PM'];
+
+/**
+ * recalcAnalitica()
+ * Lee los datos actuales del gráfico de líneas y actualiza las 4 cards
+ * de la sección Analítica: hora pico, día de mayor consumo, promedio
+ * diario y predicción del mes.
+ */
+function recalcAnalitica() {
+    if (!lineChart) return;
+
+    const data   = lineChart.data.datasets[0].data;   // [kWh x 7 días]
+    const labels = lineChart.data.labels;              // ['Lun', 'Mar', ...]
+
+    // -- Promedio diario --
+    const total = data.reduce((s, v) => s + v, 0);
+    const avg   = total / data.length;
+
+    // -- Día de mayor consumo --
+    const maxIdx  = data.indexOf(Math.max(...data));
+    const topDay  = labels[maxIdx] || '--';
+
+    // -- Hora pico: se asigna de forma proporcional al valor del día pico
+    //    (cuanto mayor el consumo, más tarde en el día se concentra el pico)
+    const peakIdx  = Math.round((data[maxIdx] / 25) * (PEAK_HOURS.length - 1));
+    const peakHour = PEAK_HOURS[Math.min(peakIdx, PEAK_HOURS.length - 1)];
+
+    // -- Predicción mensual: promedio diario × 30 días × tarifa --
+    const forecast = (avg * 30 * TARIFA_SOL_KWH).toFixed(0);
+
+    // -- Actualizar DOM --
+    const cards = document.querySelectorAll('#analitica .card.stat p');
+    // cards[0] = Hora pico, [1] = Día mayor consumo, [2] = Promedio diario, [3] = Predicción
+    if (cards[0]) cards[0].textContent = peakHour;
+    if (cards[1]) cards[1].textContent = topDay;
+    if (cards[2]) cards[2].textContent = avg.toFixed(1) + ' kWh';
+    if (cards[3]) cards[3].textContent = 'S/ ' + forecast;
+}
+
+/**
+ * recalcCentroStats()
+ * Actualiza las cards del Centro Energético:
+ *  - Consumo mensual: suma semanal × 4 + ajuste por dispositivos activos
+ *  - Gasto estimado: consumo mensual × tarifa
+ *  - Ahorro: porcentaje basado en cuántos dispositivos están apagados
+ */
+function recalcCentroStats() {
+    if (!lineChart) return;
+
+    const data          = lineChart.data.datasets[0].data;
+    const weeklyTotal   = data.reduce((s, v) => s + v, 0);
+    const activeDevices = devices.filter(d => d.active).length;
+
+    // Consumo mensual = proyección semanal × 4 + consumo base de dispositivos activos
+    const monthly = Math.round(weeklyTotal * 4 + activeDevices * CONSUMO_DEVICE_KWH);
+
+    // Gasto estimado en soles
+    const cost = (monthly * TARIFA_SOL_KWH).toFixed(0);
+
+    // Ahorro: cada dispositivo inactivo representa ~3% de ahorro (máx 40%)
+    const inactiveDevices = devices.filter(d => !d.active).length;
+    const saving = Math.min(inactiveDevices * 3 + 5, 40);
+
+    // -- Actualizar DOM --
+    const statMonthly = document.getElementById('stat-monthly');
+    const statCost    = document.getElementById('stat-cost');
+
+    if (statMonthly) statMonthly.textContent = monthly + ' kWh';
+    if (statCost)    statCost.textContent    = 'S/ ' + cost;
+
+    // Actualizar card de Ahorro (3er card.stat en #centro)
+    const savingCards = document.querySelectorAll('#centro .card.stat p');
+    if (savingCards[2]) savingCards[2].textContent = saving + '%';
+}
+
 /* ============ INIT ============ */
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
@@ -500,4 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory();
     renderInsights();
     startClock();
+    // Calcular métricas iniciales con los datos por defecto
+    recalcAnalitica();
+    recalcCentroStats();
 });
