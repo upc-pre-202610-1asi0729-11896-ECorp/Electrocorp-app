@@ -1,131 +1,169 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ElectroCorp</title>
-    <link rel="stylesheet" href="./css/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="app.title">ElectroCorp</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<div class="sidebar">
+<!-- ===================== SIDEBAR ===================== -->
+<aside class="sidebar">
     <div class="logo">⚡ ElectroCorp</div>
 
-    <div class="menu-item active-menu" onclick="showSection('centro', this)">⚡ Centro Energético</div>
-    <div class="menu-item" onclick="showSection('analitica', this)">📊 Analítica</div>
-    <div class="menu-item" onclick="showSection('dispositivos', this)">🔌 Dispositivos</div>
-    <div class="menu-item" onclick="showSection('historial', this)">📜 Historial</div>
-    <div class="menu-item" onclick="showSection('insights', this)">💡 IA Energética</div>
-</div>
+    <nav>
+        <div class="menu-item active-menu" data-section="centro" onclick="showSection('centro', this)">
+            <span>⚡</span> <span data-i18n="menu.centro">Centro Energético</span>
+        </div>
+        <div class="menu-item" data-section="analitica" onclick="showSection('analitica', this)">
+            <span>📊</span> <span data-i18n="menu.analitica">Analítica</span>
+        </div>
+        <div class="menu-item" data-section="dispositivos" onclick="showSection('dispositivos', this)">
+            <span>🔌</span> <span data-i18n="menu.dispositivos">Dispositivos</span>
+        </div>
+        <div class="menu-item" data-section="historial" onclick="showSection('historial', this)">
+            <span>📜</span> <span data-i18n="menu.historial">Historial</span>
+        </div>
+        <div class="menu-item" data-section="insights" onclick="showSection('insights', this)">
+            <span>💡</span> <span data-i18n="menu.insights">IA Energética</span>
+        </div>
+    </nav>
 
+    <div class="sidebar-footer">
+        <div class="clock" id="clock">--:--:--</div>
+    </div>
+</aside>
+
+<!-- ===================== MAIN ===================== -->
 <div class="main">
 
+    <!-- TOPBAR: idioma + tema -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="badge" data-i18n="topbar.welcome">Bienvenido</span>
+        </div>
+        <div class="topbar-right">
+            <div class="lang-switch" role="group" aria-label="Language">
+                <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')">ES</button>
+                <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" data-lang="pt" onclick="setLanguage('pt')">PT</button>
+            </div>
+            <button class="btn-ghost theme-toggle" onclick="toggleTheme()" title="Theme">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+    </header>
+
     <!-- CENTRO -->
-    <div id="centro" class="section active">
-        <h1>Centro Energético</h1>
+    <section id="centro" class="section active">
+        <h1 data-i18n="centro.title">Centro Energético</h1>
 
         <div class="cards">
-            <div class="card stat"><h2>Consumo mensual</h2><p>320 kWh</p></div>
-            <div class="card stat"><h2>Gasto estimado</h2><p>S/ 145</p></div>
-            <div class="card stat"><h2>Ahorro</h2><p>18%</p></div>
-            <div class="card stat"><h2>Dispositivos</h2><p>6</p></div>
+            <div class="card stat">
+                <h2 data-i18n="centro.monthly">Consumo mensual</h2>
+                <p id="stat-monthly">320 kWh</p>
+            </div>
+            <div class="card stat">
+                <h2 data-i18n="centro.cost">Gasto estimado</h2>
+                <p id="stat-cost">S/ 145</p>
+            </div>
+            <div class="card stat">
+                <h2 data-i18n="centro.saving">Ahorro</h2>
+                <p>18%</p>
+            </div>
+            <div class="card stat">
+                <h2 data-i18n="centro.devices">Dispositivos</h2>
+                <p id="stat-devices">3</p>
+            </div>
         </div>
 
         <div class="card big chart-wrapper"><canvas id="chart"></canvas></div>
 
-        <button class="btn-primary" onclick="openModal()">Agregar consumo</button>
-    </div>
+        <div class="actions-row">
+            <button class="btn-primary" onclick="openModal()">
+                <span data-i18n="centro.addConsumption">Agregar consumo</span>
+            </button>
+            <button class="btn-ghost" onclick="randomizeChart()" data-i18n="centro.simulate">
+                Simular semana
+            </button>
+        </div>
+    </section>
 
     <!-- ANALITICA -->
-    <div id="analitica" class="section">
-        <h1>Analítica Avanzada</h1>
+    <section id="analitica" class="section">
+        <h1 data-i18n="analitica.title">Analítica Avanzada</h1>
 
         <div class="cards">
-            <div class="card stat"><h2>Hora pico</h2><p>7 PM</p></div>
-            <div class="card stat"><h2>Día mayor consumo</h2><p>Martes</p></div>
-            <div class="card stat"><h2>Promedio diario</h2><p>10.5 kWh</p></div>
-            <div class="card stat"><h2>Predicción</h2><p>S/ 180</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.peak">Hora pico</h2><p>7 PM</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.topDay">Día mayor consumo</h2><p data-i18n="days.tue">Martes</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.avg">Promedio diario</h2><p>10.5 kWh</p></div>
+            <div class="card stat"><h2 data-i18n="analitica.forecast">Predicción</h2><p>S/ 180</p></div>
         </div>
 
         <div class="card chart-wrapper"><canvas id="chartBar"></canvas></div>
-    </div>
+    </section>
 
     <!-- DISPOSITIVOS -->
-    <div id="dispositivos" class="section">
-        <h1>Dispositivos</h1>
+    <section id="dispositivos" class="section">
+        <h1 data-i18n="dispositivos.title">Dispositivos</h1>
 
         <div class="card">
+            <div class="toolbar">
+                <input type="text" id="device-search" class="search-input"
+                       placeholder="Buscar..." data-i18n-placeholder="dispositivos.search"
+                       oninput="renderDevices()">
+                <button class="btn-primary" onclick="addDevicePrompt()">
+                    + <span data-i18n="dispositivos.add">Agregar</span>
+                </button>
+            </div>
+
             <table>
                 <thead>
-                <tr><th>Dispositivo</th><th>Estado</th><th>Acción</th></tr>
+                <tr>
+                    <th data-i18n="dispositivos.colName">Dispositivo</th>
+                    <th data-i18n="dispositivos.colState">Estado</th>
+                    <th data-i18n="dispositivos.colAction">Acción</th>
+                </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td>Refrigeradora</td>
-                    <td id="estado-1" class="estado-activo">Activado</td>
-                    <td>
-                        <button id="btn-1" class="btn-danger" onclick="toggleDevice(1, 'btn-1')">
-                            Desactivar
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>TV</td>
-                    <td id="estado-2" class="estado-activo">Activado</td>
-                    <td>
-                        <button id="btn-2" class="btn-danger" onclick="toggleDevice(2, 'btn-2')">
-                            Desactivar
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Aire acondicionado</td>
-                    <td id="estado-3" class="estado-inactivo">Desactivado</td>
-                    <td>
-                        <button id="btn-3" class="btn-success" onclick="toggleDevice(3, 'btn-3')">
-                            Activar
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
+                <tbody id="devices-tbody"></tbody>
             </table>
         </div>
-    </div>
+    </section>
 
     <!-- HISTORIAL -->
-    <div id="historial" class="section">
-        <h1>Historial</h1>
+    <section id="historial" class="section">
+        <h1 data-i18n="historial.title">Historial</h1>
 
         <div class="card">
-            <ul class="history-list">
-                <li><span>Hoy</span><strong>12 kWh</strong></li>
-                <li><span>Ayer</span><strong>10 kWh</strong></li>
-                <li><span>Lunes</span><strong>14 kWh</strong></li>
-                <li><span>Domingo</span><strong>9 kWh</strong></li>
-                <li><span>Sábado</span><strong>11 kWh</strong></li>
-            </ul>
+            <div class="toolbar">
+                <span class="muted" data-i18n="historial.subtitle">Últimos registros</span>
+                <div class="toolbar-actions">
+                    <button class="btn-ghost" onclick="exportHistoryCSV()" data-i18n="historial.export">Exportar CSV</button>
+                    <button class="btn-danger" onclick="clearHistory()" data-i18n="historial.clear">Limpiar</button>
+                </div>
+            </div>
+            <ul class="history-list" id="history-list"></ul>
         </div>
-    </div>
+    </section>
 
     <!-- INSIGHTS -->
-    <div id="insights" class="section">
-        <h1>IA Energética</h1>
-
-        <div class="insight">⚠️ Consumo elevado detectado en horas pico</div>
-        <div class="insight">💡 Reduce el aire acondicionado 2°C para ahorrar 12%</div>
-        <div class="insight">✅ Ahorro proyectado de S/ 35 este mes</div>
-        <div class="insight">🔋 Tu refrigeradora consume más que el promedio</div>
-    </div>
+    <section id="insights" class="section">
+        <h1 data-i18n="insights.title">IA Energética</h1>
+        <div id="insights-list"></div>
+    </section>
 
 </div>
 
-<!-- MODAL -->
+<!-- ===================== MODAL ===================== -->
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h3>Nuevo Consumo</h3>
-        <input id="kwh-input" placeholder="kWh" type="number">
+        <h3 data-i18n="modal.title">Nuevo Consumo</h3>
+        <input id="kwh-input" placeholder="kWh" type="number" min="0" step="0.1">
         <div class="modal-actions">
-            <button class="btn-ghost" onclick="closeModal(false)">Cancelar</button>
-            <button class="btn-primary" onclick="closeModal(true)">Guardar</button>
+            <button class="btn-ghost" onclick="closeModal(false)" data-i18n="modal.cancel">Cancelar</button>
+            <button class="btn-primary" onclick="closeModal(true)" data-i18n="modal.save">Guardar</button>
         </div>
     </div>
 </div>
@@ -133,6 +171,6 @@
 <div class="toast" id="toast">Acción realizada</div>
 <div class="loader" id="loader"></div>
 
-<script src="./js/app.js"></script>
+<script th:src="@{/js/app.js}"></script>
 </body>
 </html>
