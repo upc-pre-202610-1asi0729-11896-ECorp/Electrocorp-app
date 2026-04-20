@@ -5,7 +5,7 @@
    con export CSV, charts en vivo, persistencia localStorage,
    reloj y atajos de teclado.
    ========================================================= */
-
+ 
 /* ============ I18N ============ */
 const I18N = {
     es: {
@@ -180,15 +180,15 @@ const I18N = {
         'insight.4': '🔋 Sua geladeira consome mais que a média'
     }
 };
-
+ 
 let currentLang = localStorage.getItem('ec.lang') || 'es';
-
+ 
 function t(key, params) {
     let str = (I18N[currentLang] && I18N[currentLang][key]) || key;
     if (params) Object.keys(params).forEach(k => { str = str.replace(`{${k}}`, params[k]); });
     return str;
 }
-
+ 
 function applyTranslations() {
     document.documentElement.lang = currentLang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -201,7 +201,7 @@ function applyTranslations() {
         b.classList.toggle('active', b.dataset.lang === currentLang);
     });
 }
-
+ 
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('ec.lang', lang);
@@ -212,7 +212,7 @@ function setLanguage(lang) {
     updateChartLabels();
     notify(t('msg.langChanged'));
 }
-
+ 
 /* ============ THEME ============ */
 function applyTheme() {
     const theme = localStorage.getItem('ec.theme') || 'dark';
@@ -226,7 +226,7 @@ function toggleTheme() {
     applyTheme();
     notify(next === 'light' ? t('msg.themeLight') : t('msg.themeDark'));
 }
-
+ 
 /* ============ NAV ============ */
 function showSection(id, el) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -235,7 +235,7 @@ function showSection(id, el) {
     if (el) el.classList.add('active-menu');
     else document.querySelector(`.menu-item[data-section="${id}"]`)?.classList.add('active-menu');
 }
-
+ 
 /* ============ DEVICES ============ */
 let devices = JSON.parse(localStorage.getItem('ec.devices') || 'null') || [
     { id: 1, name: 'Refrigeradora', active: true },
@@ -243,15 +243,15 @@ let devices = JSON.parse(localStorage.getItem('ec.devices') || 'null') || [
     { id: 3, name: 'Aire acondicionado', active: false }
 ];
 let nextDeviceId = devices.reduce((m, d) => Math.max(m, d.id), 0) + 1;
-
+ 
 function saveDevices() { localStorage.setItem('ec.devices', JSON.stringify(devices)); }
-
+ 
 function renderDevices() {
     const tbody = document.getElementById('devices-tbody');
     if (!tbody) return;
     const q = (document.getElementById('device-search')?.value || '').toLowerCase();
     const list = devices.filter(d => d.name.toLowerCase().includes(q));
-
+ 
     tbody.innerHTML = list.map(d => `
         <tr>
             <td>${escapeHtml(d.name)}</td>
@@ -271,11 +271,11 @@ function renderDevices() {
             </td>
         </tr>
     `).join('');
-
+ 
     const statDevices = document.getElementById('stat-devices');
     if (statDevices) statDevices.textContent = devices.length;
 }
-
+ 
 function toggleDevice(id) {
     const d = devices.find(x => x.id === id);
     if (!d) return;
@@ -284,9 +284,10 @@ function toggleDevice(id) {
     renderDevices();
     // ── LÓGICA DE NEGOCIO: el costo estimado cambia según dispositivos activos ──
     recalcCentroStats();
+    recalcBarChart();
     notify(`${d.name}: ${d.active ? t('dispositivos.activated') : t('dispositivos.deactivated')}`);
 }
-
+ 
 function deleteDevice(id) {
     const d = devices.find(x => x.id === id);
     if (!d) return;
@@ -295,9 +296,10 @@ function deleteDevice(id) {
     renderDevices();
     // ── LÓGICA DE NEGOCIO: recalcular al eliminar ──
     recalcCentroStats();
+    recalcBarChart();
     notify(t('msg.deleted', { n: d.name }));
 }
-
+ 
 function addDevicePrompt() {
     const name = prompt(t('dispositivos.promptName'));
     if (!name || !name.trim()) return;
@@ -307,9 +309,10 @@ function addDevicePrompt() {
     renderDevices();
     // ── LÓGICA DE NEGOCIO: recalcular al agregar ──
     recalcCentroStats();
+    recalcBarChart();
     notify(t('msg.added', { n: d.name }));
 }
-
+ 
 /* ============ HISTORY ============ */
 let history = JSON.parse(localStorage.getItem('ec.history') || 'null') || [
     { day: 'Hoy',     value: 12 },
@@ -319,7 +322,7 @@ let history = JSON.parse(localStorage.getItem('ec.history') || 'null') || [
     { day: 'Sábado',  value: 11 }
 ];
 function saveHistory() { localStorage.setItem('ec.history', JSON.stringify(history)); }
-
+ 
 function renderHistory() {
     const ul = document.getElementById('history-list');
     if (!ul) return;
@@ -331,7 +334,7 @@ function renderHistory() {
         <li><span>${escapeHtml(h.day)}</span><strong>${h.value} kWh</strong></li>
     `).join('');
 }
-
+ 
 function exportHistoryCSV() {
     const rows = [['day', 'kWh'], ...history.map(h => [h.day, h.value])];
     const csv = rows.map(r => r.join(',')).join('\n');
@@ -341,14 +344,14 @@ function exportHistoryCSV() {
     a.href = url; a.download = 'historial.csv'; a.click();
     URL.revokeObjectURL(url);
 }
-
+ 
 function clearHistory() {
     history = [];
     saveHistory();
     renderHistory();
     notify(t('msg.cleared'));
 }
-
+ 
 /* ============ INSIGHTS ============ */
 function renderInsights() {
     const el = document.getElementById('insights-list');
@@ -356,14 +359,14 @@ function renderInsights() {
     el.innerHTML = ['insight.1', 'insight.2', 'insight.3', 'insight.4']
         .map(k => `<div class="insight">${t(k)}</div>`).join('');
 }
-
+ 
 /* ============ MODAL ============ */
 function openModal() { document.getElementById('modal').classList.add('open'); }
-
+ 
 function closeModal(save) {
     const modal = document.getElementById('modal');
     const input = document.getElementById('kwh-input');
-
+ 
     if (save) {
         const value = parseFloat(input.value);
         if (!value || value <= 0) { notify(t('msg.invalid'), true); return; }
@@ -374,12 +377,13 @@ function closeModal(save) {
         // ── LÓGICA DE NEGOCIO: recalcular todo al agregar consumo ──
         recalcCentroStats();
         recalcAnalitica();
+        recalcBarChart();
         notify(t('msg.saved', { v: value }));
     }
     input.value = '';
     modal.classList.remove('open');
 }
-
+ 
 /* ============ TOAST ============ */
 let toastTimer;
 function notify(message, isError) {
@@ -392,16 +396,16 @@ function notify(message, isError) {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
 }
-
+ 
 /* ============ CHARTS ============ */
 const chartTextColor = () => document.body.classList.contains('light') ? '#0f172a' : '#f1f5f9';
 const chartGridColor = () => document.body.classList.contains('light') ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.08)';
 let lineChart, barChart;
-
+ 
 function dayLabels() {
     return ['days.mon','days.tue','days.wed','days.thu','days.fri','days.sat','days.sun'].map(t);
 }
-
+ 
 function buildCharts() {
     const lineCtx = document.getElementById('chart');
     if (lineCtx) {
@@ -422,17 +426,15 @@ function buildCharts() {
     }
     const barCtx = document.getElementById('chartBar');
     if (barCtx) {
+        const { labels, data, colors } = barChartDataFromDevices();
         barChart = new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: ['TV', 'Refri', 'AC', 'Laptop'],
+                labels,
                 datasets: [{
                     label: 'kWh',
-                    data: [40, 120, 60, 30],
-                    backgroundColor: [
-                        'rgba(56,189,248,0.8)','rgba(125,211,252,0.8)',
-                        'rgba(34,197,94,0.8)','rgba(245,158,11,0.8)'
-                    ],
+                    data,
+                    backgroundColor: colors,
                     borderRadius: 8
                 }]
             },
@@ -440,7 +442,7 @@ function buildCharts() {
         });
     }
 }
-
+ 
 function chartOptions() {
     return {
         responsive: true, maintainAspectRatio: false,
@@ -451,7 +453,7 @@ function chartOptions() {
         }
     };
 }
-
+ 
 function updateChartLabels() {
     if (lineChart) { lineChart.data.labels = dayLabels(); lineChart.update(); }
     [lineChart, barChart].forEach(c => {
@@ -460,24 +462,25 @@ function updateChartLabels() {
         c.update();
     });
 }
-
+ 
 function addPointToLineChart(value) {
     if (!lineChart) return;
     lineChart.data.datasets[0].data.push(value);
     lineChart.data.datasets[0].data.shift();
     lineChart.update();
 }
-
+ 
 function randomizeChart() {
     if (!lineChart) return;
     lineChart.data.datasets[0].data = Array.from({length: 7}, () => Math.round(5 + Math.random() * 20));
     lineChart.update();
-    // ── LÓGICA DE NEGOCIO: actualizar analítica y centro con los datos nuevos ──
+    // ── LÓGICA DE NEGOCIO: actualizar analítica, centro y barras con los datos nuevos ──
     recalcAnalitica();
     recalcCentroStats();
+    recalcBarChart();
     notify(t('msg.simulated'));
 }
-
+ 
 /* ============ CLOCK ============ */
 function startClock() {
     const el = document.getElementById('clock');
@@ -485,14 +488,14 @@ function startClock() {
     const tick = () => { el.textContent = new Date().toLocaleTimeString(); };
     tick(); setInterval(tick, 1000);
 }
-
+ 
 /* ============ HELPERS ============ */
 function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
         {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
     ));
 }
-
+ 
 /* ============ KEYBOARD ============ */
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.getElementById('modal')?.classList.remove('open');
@@ -502,29 +505,29 @@ document.addEventListener('keydown', e => {
         document.getElementById('device-search')?.focus();
     }
 });
-
+ 
 /* ================================================================
    LÓGICA DE NEGOCIO — Recálculo de métricas
    ================================================================ */
-
+ 
 /**
  * Tarifa estimada por kWh en soles (Perú, referencia Osinergmin).
  * Se puede ajustar fácilmente desde aquí.
  */
 const TARIFA_SOL_KWH = 0.45;
-
+ 
 /**
  * Consumo base por dispositivo activo (kWh/mes estimado).
  * Permite que encender/apagar dispositivos afecte el gasto estimado.
  */
 const CONSUMO_DEVICE_KWH = 8;
-
+ 
 /**
  * Horas pico simuladas para el análisis (índices en el array de 7 días).
  * Se detecta según cuál día/hora tiene el valor más alto.
  */
 const PEAK_HOURS = ['6 AM', '8 AM', '12 PM', '3 PM', '7 PM', '9 PM'];
-
+ 
 /**
  * recalcAnalitica()
  * Lee los datos actuales del gráfico de líneas y actualiza las 4 cards
@@ -533,26 +536,26 @@ const PEAK_HOURS = ['6 AM', '8 AM', '12 PM', '3 PM', '7 PM', '9 PM'];
  */
 function recalcAnalitica() {
     if (!lineChart) return;
-
+ 
     const data   = lineChart.data.datasets[0].data;   // [kWh x 7 días]
     const labels = lineChart.data.labels;              // ['Lun', 'Mar', ...]
-
+ 
     // -- Promedio diario --
     const total = data.reduce((s, v) => s + v, 0);
     const avg   = total / data.length;
-
+ 
     // -- Día de mayor consumo --
     const maxIdx  = data.indexOf(Math.max(...data));
     const topDay  = labels[maxIdx] || '--';
-
+ 
     // -- Hora pico: se asigna de forma proporcional al valor del día pico
     //    (cuanto mayor el consumo, más tarde en el día se concentra el pico)
     const peakIdx  = Math.round((data[maxIdx] / 25) * (PEAK_HOURS.length - 1));
     const peakHour = PEAK_HOURS[Math.min(peakIdx, PEAK_HOURS.length - 1)];
-
+ 
     // -- Predicción mensual: promedio diario × 30 días × tarifa --
     const forecast = (avg * 30 * TARIFA_SOL_KWH).toFixed(0);
-
+ 
     // -- Actualizar DOM --
     const cards = document.querySelectorAll('#analitica .card.stat p');
     // cards[0] = Hora pico, [1] = Día mayor consumo, [2] = Promedio diario, [3] = Predicción
@@ -561,7 +564,7 @@ function recalcAnalitica() {
     if (cards[2]) cards[2].textContent = avg.toFixed(1) + ' kWh';
     if (cards[3]) cards[3].textContent = 'S/ ' + forecast;
 }
-
+ 
 /**
  * recalcCentroStats()
  * Actualiza las cards del Centro Energético:
@@ -571,33 +574,88 @@ function recalcAnalitica() {
  */
 function recalcCentroStats() {
     if (!lineChart) return;
-
+ 
     const data          = lineChart.data.datasets[0].data;
     const weeklyTotal   = data.reduce((s, v) => s + v, 0);
     const activeDevices = devices.filter(d => d.active).length;
-
+ 
     // Consumo mensual = proyección semanal × 4 + consumo base de dispositivos activos
     const monthly = Math.round(weeklyTotal * 4 + activeDevices * CONSUMO_DEVICE_KWH);
-
+ 
     // Gasto estimado en soles
     const cost = (monthly * TARIFA_SOL_KWH).toFixed(0);
-
+ 
     // Ahorro: cada dispositivo inactivo representa ~3% de ahorro (máx 40%)
     const inactiveDevices = devices.filter(d => !d.active).length;
     const saving = Math.min(inactiveDevices * 3 + 5, 40);
-
+ 
     // -- Actualizar DOM --
     const statMonthly = document.getElementById('stat-monthly');
     const statCost    = document.getElementById('stat-cost');
-
+ 
     if (statMonthly) statMonthly.textContent = monthly + ' kWh';
     if (statCost)    statCost.textContent    = 'S/ ' + cost;
-
+ 
     // Actualizar card de Ahorro (3er card.stat en #centro)
     const savingCards = document.querySelectorAll('#centro .card.stat p');
     if (savingCards[2]) savingCards[2].textContent = saving + '%';
 }
-
+ 
+/**
+ * barChartDataFromDevices()
+ * Genera labels, datos y colores para el gráfico de barras
+ * basándose en la lista real de dispositivos.
+ * - Dispositivos activos  → color azul primario
+ * - Dispositivos inactivos → gris semitransparente
+ * El consumo de cada dispositivo se estima proporcionalmente
+ * al promedio semanal del gráfico de líneas.
+ */
+function barChartDataFromDevices() {
+    const weeklyData  = lineChart ? lineChart.data.datasets[0].data : [12,19,10,15,14,9,11];
+    const weeklyTotal = weeklyData.reduce((s, v) => s + v, 0);
+    const activeCount = devices.filter(d => d.active).length || 1;
+ 
+    // Consumo base proporcional: total semanal se reparte entre dispositivos activos
+    const basePerDevice = weeklyTotal / activeCount;
+ 
+    const PALETTE_ACTIVE   = ['rgba(56,189,248,0.85)', 'rgba(125,211,252,0.85)',
+                               'rgba(34,197,94,0.85)',  'rgba(245,158,11,0.85)',
+                               'rgba(168,85,247,0.85)', 'rgba(249,115,22,0.85)'];
+    const COLOR_INACTIVE   = 'rgba(148,163,184,0.35)';
+ 
+    let colorIdx = 0;
+    const labels = [], data = [], colors = [];
+ 
+    devices.forEach(d => {
+        labels.push(d.name.length > 10 ? d.name.slice(0, 9) + '…' : d.name);
+        if (d.active) {
+            // Variación aleatoria estable por ID para que no cambie en cada render
+            const seed    = ((d.id * 7) % 5) * 0.15;  // ±0–0.75 de variación
+            data.push(Math.round(basePerDevice * (0.7 + seed)));
+            colors.push(PALETTE_ACTIVE[colorIdx % PALETTE_ACTIVE.length]);
+            colorIdx++;
+        } else {
+            data.push(Math.round(basePerDevice * 0.05)); // inactivo = consumo mínimo residual
+            colors.push(COLOR_INACTIVE);
+        }
+    });
+ 
+    return { labels, data, colors };
+}
+ 
+/**
+ * recalcBarChart()
+ * Actualiza el gráfico de barras con los dispositivos actuales.
+ */
+function recalcBarChart() {
+    if (!barChart) return;
+    const { labels, data, colors } = barChartDataFromDevices();
+    barChart.data.labels                              = labels;
+    barChart.data.datasets[0].data                   = data;
+    barChart.data.datasets[0].backgroundColor        = colors;
+    barChart.update();
+}
+ 
 /* ============ INIT ============ */
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
@@ -610,4 +668,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calcular métricas iniciales con los datos por defecto
     recalcAnalitica();
     recalcCentroStats();
+    recalcBarChart();
 });
