@@ -1,0 +1,32 @@
+### Crear dispositivo
+POST http://localhost:8080/api/devices
+Content-Type: application/json
+
+{
+  "name": "Refrigeradora",
+  "code": "DEV-001",
+  "type": "SMART_PLUG",
+  "ownerId": "11111111-1111-1111-1111-111111111111"
+}
+
+### Ver dispositivos
+GET http://localhost:8080/api/devices
+
+### Registrar lectura energética
+POST http://localhost:8080/api/energy/readings
+Content-Type: application/json
+
+{
+  "deviceId": "7062f5da-9eb7-44b0-a546-17077a8a8f68",
+  "amount": 25.5
+}
+
+
+### Ver lecturas energéticas
+GET http://localhost:8080/api/energy/readings
+
+### Ver alertas
+GET http://localhost:8080/api/alerts
+
+### Ver recomendaciones
+GET http://localhost:8080/api/energy/recommendations
