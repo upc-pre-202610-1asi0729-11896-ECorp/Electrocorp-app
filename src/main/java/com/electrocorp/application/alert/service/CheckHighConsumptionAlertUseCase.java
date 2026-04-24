@@ -9,19 +9,26 @@ import org.springframework.stereotype.Service;
 public class CheckHighConsumptionAlertUseCase {
 
     private final AlertRepository alertRepository;
+    private final NotificationGateway notificationGateway;
 
-    public CheckHighConsumptionAlertUseCase(AlertRepository alertRepository) {
+    public CheckHighConsumptionAlertUseCase(
+            AlertRepository alertRepository,
+            NotificationGateway notificationGateway
+    ) {
         this.alertRepository = alertRepository;
+        this.notificationGateway = notificationGateway;
     }
 
     public void execute(EnergyReading reading) {
         if (reading.getAmount().getValue() > 20) {
-            alertRepository.save(
+            Alert alert = alertRepository.save(
                     new Alert(
                             reading.getDeviceId(),
                             "⚠️ Alto consumo detectado para el dispositivo " + reading.getDeviceId()
                     )
             );
+
+            notificationGateway.send(alert.getMessage());
         }
     }
 }

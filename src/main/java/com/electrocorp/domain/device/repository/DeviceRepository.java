@@ -11,4 +11,5 @@ public interface DeviceRepository {
     Optional<Device> findById(UUID id);
     List<Device> findByOwnerId(UUID ownerId);
     List<Device> findAll();
+    void deleteById(UUID id);
 }
