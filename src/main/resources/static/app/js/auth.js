@@ -38,7 +38,7 @@ async function login() {
 
         notify('Inicio de sesión exitoso');
         setTimeout(() => {
-            window.location.href = '/app/index.html';
+            window.location.href = '/app/dashboard.html';
         }, 700);
     } catch (e) {
         console.error(e);
