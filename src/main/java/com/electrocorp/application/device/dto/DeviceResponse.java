@@ -1,5 +1,6 @@
 package com.electrocorp.application.device.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 public class DeviceResponse {
@@ -9,4 +10,5 @@ public class DeviceResponse {
     public String type;
     public String status;
     public UUID ownerId;
+    public List<DeviceScheduleResponse> schedules;
 }

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="app.title">ElectroCorp</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">⚡ ElectroCorp</div>
+
+    <nav>
+        <div class="menu-item active-menu" data-section="centro" onclick="showSection('centro', this)">
+            <span>⚡</span>
+            <span data-i18n="menu.centro">Centro Energético</span>
+        </div>
+
+        <div class="menu-item" data-section="analitica" onclick="showSection('analitica', this)">
+            <span>📊</span>
+            <span data-i18n="menu.analitica">Analítica</span>
+        </div>
+
+        <div class="menu-item" data-section="dispositivos" onclick="showSection('dispositivos', this)">
+            <span>🔌</span>
+            <span data-i18n="menu.dispositivos">Dispositivos</span>
+        </div>
+
+        <div class="menu-item" data-section="rutinas" onclick="showSection('rutinas', this)">
+            <span>⏰</span>
+            <span data-i18n="menu.routines">Rutinas</span>
+        </div>
+
+        <div class="menu-item" data-section="tiempo-real" onclick="showSection('tiempo-real', this)">
+            <span>📡</span>
+            <span data-i18n="menu.realtime">Tiempo real</span>
+        </div>
+
+        <div class="menu-item" data-section="reportes" onclick="showSection('reportes', this)">
+            <span>📑</span>
+            <span data-i18n="menu.reports">Reportes</span>
+        </div>
+
+        <div class="menu-item" data-section="notificaciones" onclick="showSection('notificaciones', this)">
+            <span>🔔</span>
+            <span data-i18n="menu.notifications">Notificaciones</span>
+        </div>
+
+        <div class="menu-item" data-section="historial" onclick="showSection('historial', this)">
+            <span>📜</span>
+            <span data-i18n="menu.historial">Historial</span>
+        </div>
+
+        <div class="menu-item" data-section="insights" onclick="showSection('insights', this)">
+            <span>💡</span>
+            <span data-i18n="menu.insights">IA Energética</span>
+        </div>
+
+        <div class="menu-item" data-section="actividad" onclick="showSection('actividad', this)">
+            <span>🕓</span>
+            <span data-i18n="menu.activity">Actividad</span>
+        </div>
+
+        <div class="menu-item" data-section="usuarios" onclick="showSection('usuarios', this)">
+            <span>👤</span>
+            <span data-i18n="menu.account">Mi cuenta</span>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="clock" id="clock">--:--:--</div>
+    </div>
+</aside>
+
+<div class="main">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="badge" data-i18n="topbar.welcome">Bienvenido</span>
+        </div>
+
+        <div class="topbar-right">
+            <div class="lang-switch" role="group" aria-label="Language selector">
+                <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')">ES</button>
+                <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" data-lang="pt" onclick="setLanguage('pt')">PT</button>
+            </div>
+
+            <button class="btn-ghost theme-toggle" onclick="toggleTheme()" title="Theme">
+                <span id="theme-icon">🌙</span>
+            </button>
+
+            <button class="btn-ghost" onclick="logout()" data-i18n="auth.logout">Salir</button>
+        </div>
+    </header>
+
+    <section id="centro" class="section active">
+        <h1 data-i18n="centro.title">Centro Energético</h1>
+
+        <div class="cards">
+            <div class="card stat">
+                <h2 data-i18n="centro.monthly">Consumo mensual</h2>
+                <p id="stat-monthly">320 kWh</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="centro.cost">Gasto estimado</h2>
+                <p id="stat-cost">S/ 145</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="centro.saving">Ahorro</h2>
+                <p id="stat-saving">18%</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="centro.devices">Dispositivos</h2>
+                <p id="stat-devices">0</p>
+            </div>
+        </div>
+
+        <div class="card big chart-wrapper">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <div class="actions-row">
+            <button class="btn-primary" onclick="openModal()">
+                <span data-i18n="centro.addConsumption">Agregar consumo</span>
+            </button>
+
+            <button class="btn-ghost" onclick="randomizeChart()" data-i18n="centro.simulate">
+                Simular semana
+            </button>
+
+            <button class="btn-ghost" onclick="showSection('dispositivos')" data-i18n="centro.viewDevices">
+                Ver dispositivos
+            </button>
+        </div>
+    </section>
+
+    <section id="analitica" class="section">
+        <h1 data-i18n="analitica.title">Analítica Avanzada</h1>
+
+        <div class="cards">
+            <div class="card stat">
+                <h2 data-i18n="analitica.peak">Hora pico</h2>
+                <p id="stat-peak">7 PM</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="analitica.topDay">Día mayor consumo</h2>
+                <p id="stat-topday">Mar</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="analitica.avg">Promedio diario</h2>
+                <p id="stat-avg">10.5 kWh</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="analitica.forecast">Predicción</h2>
+                <p id="stat-forecast">S/ 180</p>
+            </div>
+        </div>
+
+        <div class="card chart-wrapper">
+            <canvas id="chartBar"></canvas>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="analitica.smartRecs">Recomendaciones inteligentes</span>
+                <button class="btn-ghost" onclick="loadRecommendations()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <div id="recommendations-list"></div>
+        </div>
+    </section>
+
+    <section id="dispositivos" class="section">
+        <h1 data-i18n="dispositivos.title">Dispositivos</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <input
+                    type="text"
+                    id="device-search"
+                    class="search-input"
+                    placeholder="Buscar..."
+                    data-i18n-placeholder="dispositivos.search"
+                    oninput="renderDevices()"
+                >
+
+                <div class="toolbar-actions">
+                    <button class="btn-primary" onclick="openAddDeviceModal()">
+                        + <span data-i18n="dispositivos.add">Agregar</span>
+                    </button>
+                    <button class="btn-ghost" onclick="loadDevices()" data-i18n="common.reload">
+                        Recargar
+                    </button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th data-i18n="dispositivos.colName">Dispositivo</th>
+                    <th data-i18n="dispositivos.colType">Tipo</th>
+                    <th data-i18n="dispositivos.colState">Estado</th>
+                    <th data-i18n="dispositivos.colAction">Acción</th>
+                </tr>
+                </thead>
+                <tbody id="devices-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="rutinas" class="section">
+        <div class="section-header-row">
+            <div>
+                <h1 data-i18n="routines.title">Rutinas</h1>
+            </div>
+            <button class="btn-primary" onclick="openRoutineModal()" data-i18n="routines.addBtn">Nueva rutina</button>
+        </div>
+
+        <div class="card">
+            <p class="muted" data-i18n="routines.subtitle">Horarios automáticos configurados</p>
+            <p class="muted" data-i18n="routines.desc">Aquí podrás ver las rutinas y horarios de tus dispositivos.</p>
+            <ul id="routines-list" class="list"></ul>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="muted" data-i18n="routines.next">Próxima rutina</span>
+                <strong id="routine-next">--</strong>
+            </div>
+            <div class="stat-card">
+                <span class="muted" data-i18n="routines.active">Rutinas activas</span>
+                <strong id="routine-active-count">0</strong>
+            </div>
+            <div class="stat-card">
+                <span class="muted" data-i18n="routines.paused">Rutinas pausadas</span>
+                <strong id="routine-paused-count">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <section id="tiempo-real" class="section">
+        <h1 data-i18n="realtime.title">Tiempo real</h1>
+
+        <div class="cards">
+            <div class="card stat">
+                <h2 data-i18n="realtime.currentConsumption">Consumo actual</h2>
+                <p id="realtime-current-consumption">--</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="realtime.activeDevices">Dispositivos encendidos</h2>
+                <p id="realtime-active-devices">--</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="realtime.topDevice">Mayor consumo actual</h2>
+                <p id="realtime-top-device">--</p>
+            </div>
+
+            <div class="card stat">
+                <h2 data-i18n="realtime.systemStatus">Estado del sistema</h2>
+                <p id="realtime-system-status">Estable</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="realtime.liveFeed">Monitoreo en vivo</span>
+                <button class="btn-ghost" onclick="renderRealtimeSection()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <ul class="history-list" id="realtime-feed-list"></ul>
+        </div>
+    </section>
+
+    <section id="reportes" class="section">
+        <h1 data-i18n="reports.title">Reportes</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="reports.subtitle">Resumen y exportación de datos</span>
+                <button class="btn-ghost" onclick="exportHistoryCSV()" data-i18n="historial.export">Exportar CSV</button>
+            </div>
+
+            <div class="cards">
+                <div class="card stat">
+                    <h2 data-i18n="reports.totalConsumption">Consumo total</h2>
+                    <p id="report-total-consumption">--</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="reports.totalCost">Costo estimado</h2>
+                    <p id="report-total-cost">--</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="reports.totalReadings">Lecturas registradas</h2>
+                    <p id="report-total-readings">--</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="reports.activeAlerts">Alertas activas</h2>
+                    <p id="report-total-alerts">--</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="reports.topConsumers">Dispositivos con mayor consumo</span>
+            </div>
+            <ul class="history-list" id="report-top-consumers-list"></ul>
+        </div>
+    </section>
+
+    <section id="notificaciones" class="section">
+        <h1 data-i18n="notifications.title">Notificaciones</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="notifications.subtitle">Eventos y alertas del sistema</span>
+                <button class="btn-ghost" onclick="renderNotificationsSection()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <div id="notifications-list"></div>
+        </div>
+    </section>
+
+    <section id="historial" class="section">
+        <h1 data-i18n="historial.title">Historial</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="historial.subtitle">Últimos registros</span>
+
+                <div class="toolbar-actions">
+                    <button class="btn-ghost" onclick="exportHistoryCSV()" data-i18n="historial.export">
+                        Exportar CSV
+                    </button>
+                    <button class="btn-danger" onclick="clearHistory()" data-i18n="historial.clear">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <ul class="history-list" id="history-list"></ul>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="historial.realReadings">Lecturas energéticas reales</span>
+                <button class="btn-ghost" onclick="loadEnergyReadings()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <ul class="history-list" id="energy-readings-list"></ul>
+        </div>
+    </section>
+
+    <section id="insights" class="section">
+        <h1 data-i18n="insights.title">IA Energética</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="insights.activeAlerts">Alertas activas</span>
+                <button class="btn-ghost" onclick="renderInsights()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <div id="insights-list"></div>
+        </div>
+    </section>
+
+    <section id="actividad" class="section">
+        <h1 data-i18n="activity.title">Actividad</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="activity.subtitle">Trazabilidad de acciones y eventos</span>
+                <button class="btn-ghost" onclick="renderActivitySection()" data-i18n="common.refresh">Actualizar</button>
+            </div>
+            <ul class="history-list" id="activity-list"></ul>
+        </div>
+    </section>
+
+    <section id="usuarios" class="section">
+        <h1 data-i18n="users.accountTitle">Mi cuenta</h1>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="users.accountInfo">Información de la cuenta</span>
+            </div>
+
+            <div class="cards">
+                <div class="card stat">
+                    <h2 data-i18n="users.fullName">Nombre completo</h2>
+                    <p id="account-fullname">--</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="users.email">Correo</h2>
+                    <p id="account-email">--</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="users.status">Estado</h2>
+                    <p id="account-status">Activo</p>
+                </div>
+
+                <div class="card stat">
+                    <h2 data-i18n="users.linkedDevices">Dispositivos vinculados</h2>
+                    <p id="account-linked-devices">0</p>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button class="btn-danger" onclick="logout()" data-i18n="auth.logout">Salir</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <span class="muted" data-i18n="users.accessProfiles">Perfiles de acceso</span>
+            </div>
+            <p class="muted" data-i18n="users.accessProfilesDesc">
+                Aquí podrás registrar miembros de familia o personal autorizado con permisos limitados.
+            </p>
+            <div class="actions-row">
+                <button class="btn-ghost" onclick="createAccessProfilePrompt()" data-i18n="users.createProfileBtn">
+                    Crear perfil de acceso
+                </button>
+                <button class="btn-danger" onclick="blockUserPrompt()" data-i18n="users.blockUserBtn">
+                    Bloquear usuario
+                </button>
+            </div>
+            <ul class="history-list" id="user-profiles-list"></ul>
+        </div>
+    </section>
+
+</div>
+
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <div class="form-panel">
+            <h3 class="form-title" data-i18n="modal.title">Nuevo Consumo</h3>
+
+            <div class="form-grid">
+                <div class="form-group span-12">
+                    <label for="kwh-input" class="form-label" data-i18n="modal.kwhLabel">Consumo en kWh</label>
+                    <input id="kwh-input" class="form-input" type="number" min="0" step="0.1" placeholder="kWh">
+                </div>
+            </div>
+
+            <div class="form-actions end">
+                <button class="btn-ghost" onclick="closeModal(false)" data-i18n="modal.cancel">Cancelar</button>
+                <button class="btn-primary" onclick="closeModal(true)" data-i18n="modal.save">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="device-modal">
+    <div class="modal-content">
+        <div class="form-panel">
+            <h3 class="form-title" data-i18n="devicesModal.title">Nuevo dispositivo</h3>
+
+            <div class="form-grid">
+                <div class="form-group span-12">
+                    <label for="device-name-input" class="form-label" data-i18n="devicesModal.name">Nombre</label>
+                    <input id="device-name-input" class="form-input" type="text" placeholder="Ej. Computadora">
+                </div>
+
+                <div class="form-group span-12">
+                    <label for="device-type-select" class="form-label" data-i18n="devicesModal.type">Tipo</label>
+                    <select id="device-type-select" class="form-select">
+                        <option value="SMART_PLUG">Smart Plug</option>
+                        <option value="SMART_SWITCH">Smart Switch</option>
+                        <option value="SENSOR">Sensor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions end">
+                <button class="btn-ghost" onclick="closeAddDeviceModal(false)" data-i18n="modal.cancel">Cancelar</button>
+                <button class="btn-primary" onclick="closeAddDeviceModal(true)" data-i18n="modal.save">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="routine-modal">
+    <div class="modal-content">
+        <div class="form-panel">
+            <h3 class="form-title" data-i18n="routines.modalTitle">Nueva rutina</h3>
+
+            <div class="form-grid">
+                <div class="form-group span-12">
+                    <label for="routine-device" class="form-label" data-i18n="routines.device">Dispositivo</label>
+                    <select id="routine-device" class="form-select"></select>
+                </div>
+
+                <div class="form-group span-12">
+                    <label for="routine-time" class="form-label" data-i18n="routines.time">Hora</label>
+                    <input id="routine-time" class="form-input" type="time" value="18:30" />
+                </div>
+
+                <div class="form-group span-12">
+                    <label for="routine-action" class="form-label" data-i18n="routines.action">Acción</label>
+                    <select id="routine-action" class="form-select">
+                        <option value="true">Encender</option>
+                        <option value="false">Apagar</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions end">
+                <button class="btn-ghost" onclick="closeRoutineModal(false)" data-i18n="modal.cancel">Cancelar</button>
+                <button class="btn-primary" onclick="closeRoutineModal(true)" data-i18n="modal.save">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Acción realizada</div>
+<div class="loader" id="loader"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

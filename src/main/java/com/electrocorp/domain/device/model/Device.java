@@ -31,6 +31,17 @@ public class Device extends AggregateRoot {
         this.activities = new ArrayList<>();
     }
 
+    public Device(UUID id, UUID ownerId, DeviceName name, DeviceCode code, DeviceType type, DeviceStatus status) {
+        this.id = id;
+        this.ownerId = ownerId;
+        this.name = name;
+        this.code = code;
+        this.type = type;
+        this.status = status;
+        this.schedules = new ArrayList<>();
+        this.activities = new ArrayList<>();
+    }
+
     public void rename(DeviceName newName) {
         this.name = newName;
     }

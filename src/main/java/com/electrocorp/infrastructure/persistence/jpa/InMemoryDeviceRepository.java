@@ -31,4 +31,9 @@ public class InMemoryDeviceRepository implements DeviceRepository {
     public List<Device> findAll() {
         return new ArrayList<>(storage.values());
     }
+
+    @Override
+    public void deleteById(UUID id) {
+        storage.remove(id);
+    }
 }

@@ -4,10 +4,7 @@ import com.electrocorp.domain.alert.repository.AlertRepository;
 import com.electrocorp.domain.device.repository.DeviceRepository;
 import com.electrocorp.domain.energy.repository.EnergyReadingRepository;
 import com.electrocorp.domain.user.repository.UserRepository;
-import com.electrocorp.infrastructure.persistence.jpa.InMemoryAlertRepository;
-import com.electrocorp.infrastructure.persistence.jpa.InMemoryDeviceRepository;
-import com.electrocorp.infrastructure.persistence.jpa.InMemoryEnergyReadingRepository;
-import com.electrocorp.infrastructure.persistence.jpa.InMemoryUserRepository;
+import com.electrocorp.infrastructure.persistence.jpa.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,9 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class BeanConfig {
 
     @Bean
-    public DeviceRepository deviceRepository() {
-        return new InMemoryDeviceRepository();
-    }
+    public DeviceRepository deviceRepository(DeviceJpaRepository deviceJpaRepository) { return new JpaDeviceRepositoryAdapter(deviceJpaRepository); }
 
     @Bean
     public UserRepository userRepository() {
@@ -25,9 +20,7 @@ public class BeanConfig {
     }
 
     @Bean
-    public EnergyReadingRepository energyReadingRepository() {
-        return new InMemoryEnergyReadingRepository();
-    }
+    public EnergyReadingRepository energyReadingRepository(EnergyReadingJpaRepository energyReadingJpaRepository) {return new JpaEnergyReadingRepositoryAdapter(energyReadingJpaRepository); }
 
     @Bean
     public AlertRepository alertRepository() {

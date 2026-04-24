@@ -18,6 +18,13 @@ public class EnergyReading {
         this.recordedAt = LocalDateTime.now();
     }
 
+    public EnergyReading(UUID id, UUID deviceId, EnergyAmount amount, LocalDateTime recordedAt) {
+        this.id = id;
+        this.deviceId = deviceId;
+        this.amount = amount;
+        this.recordedAt = recordedAt;
+    }
+
     public UUID getId() {
         return id;
     }
