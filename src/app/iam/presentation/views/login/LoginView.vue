@@ -1,3 +1,50 @@
+<template>
+  <section class="auth-view">
+    <div class="auth-card">
+      <p class="eyebrow">Welcome back</p>
+      <h1>Login</h1>
+      <p class="subtitle">
+        Access your ElectroCorp dashboard to manage devices, routines and energy usage.
+      </p>
+
+      <form class="auth-form" @submit.prevent="handleSubmit">
+        <div class="field">
+          <label>Email</label>
+          <input v-model="email" type="email" placeholder="jean@example.com" />
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input v-model="password" type="password" placeholder="123456" />
+        </div>
+
+        <p v-if="iamStore.error" class="error">{{ iamStore.error }}</p>
+
+        <div class="actions">
+          <button type="submit" class="primary-btn">
+            Sign In
+          </button>
+
+          <RouterLink to="/iam/register" class="ghost-btn">
+            Create Account
+          </RouterLink>
+        </div>
+      </form>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
+import { useIamStore } from '../../../application/stores/iam.store';
+
+const router = useRouter();
+const iamStore = useIamStore();
+
+const email = ref('');
+const password = ref('');
+
 async function handleSubmit() {
   await iamStore.signIn({
     email: email.value,
@@ -8,27 +55,45 @@ async function handleSubmit() {
     router.push('/home');
   }
 }
+</script>
 
 <style scoped lang="scss">
 .auth-view {
+  min-height: calc(100vh - 180px);
   display: flex;
   justify-content: center;
-  padding-top: 40px;
+  align-items: flex-start;
+  padding-top: 48px;
 }
 
 .auth-card {
   width: 100%;
   max-width: 520px;
-  padding: 32px;
-  border-radius: 24px;
+  padding: 34px;
+  border-radius: 26px;
   background: var(--surface-main);
   border: 1px solid var(--border-accent);
   box-shadow: var(--shadow-accent);
 }
 
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-main);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 h1 {
-  margin: 0 0 24px;
+  margin: 0 0 12px;
   color: var(--text-main);
+  font-size: 2.2rem;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 .auth-form {
@@ -45,6 +110,7 @@ h1 {
 
 label {
   color: var(--text-muted);
+  font-weight: 700;
 }
 
 input {
@@ -53,12 +119,14 @@ input {
   border: 1px solid var(--border-soft);
   background: var(--surface-strong);
   color: var(--text-main);
+  font-family: inherit;
 }
 
 .actions {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .primary-btn,
@@ -66,7 +134,7 @@ input {
   padding: 12px 16px;
   border-radius: 12px;
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
   font-family: inherit;
 }
@@ -86,5 +154,6 @@ input {
 .error {
   color: var(--danger-text);
   margin: 0;
+  font-weight: 700;
 }
 </style>
