@@ -1,3 +1,23 @@
+<template>
+  <section class="not-found-view">
+    <div class="card">
+      <h1>{{ t('notFound.title') }}</h1>
+      <p>{{ t('notFound.content') }}</p>
+
+      <RouterLink to="/home" class="go-home">
+        {{ t('notFound.goHome') }}
+      </RouterLink>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+</script>
+
 <style scoped lang="scss">
 .not-found-view {
   display: flex;
