@@ -3,18 +3,20 @@ import { ref } from 'vue';
 import { ThemeService } from '../services/theme.service';
 import { STORAGE_KEYS } from '../../infrastructure/constants';
 
+export type AppLanguage = 'es' | 'en' | 'pt';
+
 export const useUiStore = defineStore('ui', () => {
     const themeService = new ThemeService();
 
-    const language = ref<'es' | 'en'>(
-        (localStorage.getItem(STORAGE_KEYS.language) as 'es' | 'en') ?? 'es'
+    const language = ref<AppLanguage>(
+        (localStorage.getItem(STORAGE_KEYS.language) as AppLanguage) ?? 'es'
     );
 
     const darkMode = ref(
         localStorage.getItem(STORAGE_KEYS.darkMode) !== 'false'
     );
 
-    function setLanguage(value: 'es' | 'en') {
+    function setLanguage(value: AppLanguage) {
         language.value = value;
         localStorage.setItem(STORAGE_KEYS.language, value);
     }

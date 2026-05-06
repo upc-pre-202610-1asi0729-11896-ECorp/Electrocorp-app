@@ -33,6 +33,15 @@
           EN
         </button>
 
+        <button
+          class="lang-btn"
+          :class="{ active: locale === 'pt' }"
+          type="button"
+          @click="switchLanguage('pt')"
+        >
+          PT
+        </button>
+
         <button class="theme-btn" type="button" @click="uiStore.toggleDarkMode">
           {{ uiStore.darkMode ? '☀️' : '🌙' }}
         </button>
@@ -68,7 +77,7 @@ const uiStore = useUiStore();
 const iamStore = useIamStore();
 const router = useRouter();
 
-function switchLanguage(language: 'es' | 'en') {
+function switchLanguage(language: 'es' | 'en' | 'pt') {
   uiStore.setLanguage(language);
   locale.value = language;
 }

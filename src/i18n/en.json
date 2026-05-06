@@ -2,6 +2,25 @@
   "app": {
     "name": "ElectroCorp"
   },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "login": {
+      "eyebrow": "Welcome back",
+      "title": "Login",
+      "subtitle": "Access your ElectroCorp dashboard to manage devices, routines and energy usage.",
+      "signIn": "Sign In",
+      "createAccount": "Create Account"
+    },
+    "register": {
+      "eyebrow": "Create access",
+      "title": "Register",
+      "subtitle": "Create your ElectroCorp account to start managing smart energy devices.",
+      "createAccount": "Create Account",
+      "backToLogin": "Back to Login"
+    }
+  },
   "nav": {
     "home": "Home",
     "about": "About",

@@ -1,20 +1,20 @@
 <template>
   <section class="auth-view">
     <div class="auth-card">
-      <p class="eyebrow">Welcome back</p>
-      <h1>Login</h1>
+      <p class="eyebrow">{{ t('auth.login.eyebrow') }}</p>
+      <h1>{{ t('auth.login.title') }}</h1>
       <p class="subtitle">
-        Access your ElectroCorp dashboard to manage devices, routines and energy usage.
+        {{ t('auth.login.subtitle') }}
       </p>
 
       <form class="auth-form" @submit.prevent="handleSubmit">
         <div class="field">
-          <label>Email</label>
+          <label>{{ t('auth.email') }}</label>
           <input v-model="email" type="email" placeholder="jean@example.com" />
         </div>
 
         <div class="field">
-          <label>Password</label>
+          <label>{{ t('auth.password') }}</label>
           <input v-model="password" type="password" placeholder="123456" />
         </div>
 
@@ -22,11 +22,11 @@
 
         <div class="actions">
           <button type="submit" class="primary-btn">
-            Sign In
+            {{ t('auth.login.signIn') }}
           </button>
 
           <RouterLink to="/iam/register" class="ghost-btn">
-            Create Account
+            {{ t('auth.login.createAccount') }}
           </RouterLink>
         </div>
       </form>
@@ -37,10 +37,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useIamStore } from '../../../application/stores/iam.store';
 
 const router = useRouter();
 const iamStore = useIamStore();
+const { t } = useI18n();
 
 const email = ref('');
 const password = ref('');
