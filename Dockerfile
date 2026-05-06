@@ -1,18 +1,27 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# ---------- Build stage ----------
+FROM node:20-alpine AS build
+
 WORKDIR /app
 
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-COPY src src
+COPY package*.json ./
 
-RUN chmod +x mvnw && ./mvnw clean package -Dmaven.test.skip=true
+RUN npm ci
 
-FROM eclipse-temurin:21-jre
-WORKDIR /app
+COPY . .
 
-COPY --from=build /app/target/*.jar app.jar
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-EXPOSE 8080
+RUN npm run build
 
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+
+# ---------- Production stage ----------
+FROM nginx:1.27-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
