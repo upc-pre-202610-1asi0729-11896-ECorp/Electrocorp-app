@@ -1,9 +1,8 @@
-import type { DeviceStatus, DeviceType } from '../../domain/model/device.entity';
+import type { DeviceType } from '../../domain/model/device.entity';
 
 export interface DeviceResource {
     name: string;
-    type: DeviceType;
-    status: DeviceStatus;
     room: string;
+    type: DeviceType;
     powerWatts: number;
 }

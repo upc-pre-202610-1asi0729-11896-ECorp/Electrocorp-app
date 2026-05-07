@@ -1,49 +1,64 @@
+import { API_BASE_URL } from '../../../shared/infrastructure/api/api-config';
 import type { DeviceResponse } from '../responses/device.response';
 import type { DeviceResource } from '../resources/device.resource';
 
-const STORAGE_KEY = 'ec.devices';
-
 export class DevicesApiEndpoint {
     async findAll(): Promise<DeviceResponse[]> {
-        const rawDevices = localStorage.getItem(STORAGE_KEY);
+        const response = await fetch(`${API_BASE_URL}/devices`);
 
-        if (!rawDevices) {
-            return [];
+        if (!response.ok) {
+            throw new Error('Error loading devices.');
         }
 
-        return JSON.parse(rawDevices) as DeviceResponse[];
+        return response.json();
     }
 
     async create(resource: DeviceResource): Promise<DeviceResponse> {
-        const devices = await this.findAll();
+        const response = await fetch(`${API_BASE_URL}/devices`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: Date.now(),
+                ...resource,
+                status: 'OFF',
+            }),
+        });
 
-        const createdDevice: DeviceResponse = {
-            id: Date.now(),
-            ...resource,
-        };
+        if (!response.ok) {
+            throw new Error('Error creating device.');
+        }
 
-        const updatedDevices = [...devices, createdDevice];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDevices));
-
-        return createdDevice;
+        return response.json();
     }
 
-    async updateStatus(deviceId: number, status: DeviceResponse['status']): Promise<DeviceResponse | null> {
-        const devices = await this.findAll();
+    async updateStatus(
+        deviceId: number,
+        status: DeviceResponse['status']
+    ): Promise<DeviceResponse | null> {
+        const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status }),
+        });
 
-        const updatedDevices = devices.map((device) =>
-            device.id === deviceId ? { ...device, status } : device
-        );
+        if (!response.ok) {
+            return null;
+        }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDevices));
-
-        return updatedDevices.find((device) => device.id === deviceId) ?? null;
+        return response.json();
     }
 
     async delete(deviceId: number): Promise<void> {
-        const devices = await this.findAll();
-        const updatedDevices = devices.filter((device) => device.id !== deviceId);
+        const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
+            method: 'DELETE',
+        });
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDevices));
+        if (!response.ok) {
+            throw new Error('Error deleting device.');
+        }
     }
 }

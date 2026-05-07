@@ -1,11 +1,12 @@
 import { PlansApiEndpoint } from '../../infrastructure/api/plans-api-endpoint';
 import { SubscriptionsApiEndpoint } from '../../infrastructure/api/subscriptions-api-endpoint';
+
 import { PlanAssembler } from '../../infrastructure/assemblers/plan.assembler';
 import { SubscriptionAssembler } from '../../infrastructure/assemblers/subscription.assembler';
+
 import type { Plan } from '../../domain/model/plan.entity';
 import type { Subscription } from '../../domain/model/subscription.entity';
-import type { CreateSubscriptionDto } from '../dtos/create-subscription.dto';
-import type { CancelSubscriptionDto } from '../dtos/cancel-subscription.dto';
+import type { SubscriptionResource } from '../../infrastructure/resources/subscription.resource';
 
 export class BillingFacade {
     private readonly plansApi = new PlansApiEndpoint();
@@ -25,16 +26,14 @@ export class BillingFacade {
         return SubscriptionAssembler.toEntity(response);
     }
 
-    async createSubscription(payload: CreateSubscriptionDto): Promise<Subscription> {
-        const response = await this.subscriptionsApi.create({
-            planCode: payload.planCode,
-        });
+    async subscribe(resource: SubscriptionResource): Promise<Subscription> {
+        const response = await this.subscriptionsApi.create(resource);
 
         return SubscriptionAssembler.toEntity(response);
     }
 
-    async cancelSubscription(payload: CancelSubscriptionDto): Promise<Subscription | null> {
-        const response = await this.subscriptionsApi.cancel(payload.subscriptionId);
+    async cancelSubscription(subscriptionId: number): Promise<Subscription | null> {
+        const response = await this.subscriptionsApi.cancel(subscriptionId);
 
         if (!response) return null;
 

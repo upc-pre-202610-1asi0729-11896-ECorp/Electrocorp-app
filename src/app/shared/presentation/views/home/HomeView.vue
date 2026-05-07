@@ -137,12 +137,15 @@ const energyStore = useEnergyMonitoringStore();
 const notificationsStore = useNotificationsStore();
 const billingStore = useBillingStore();
 
-onMounted(() => {
-  deviceStore.loadDevices();
-  energyStore.loadReadings();
-  notificationsStore.loadAlerts();
-  billingStore.loadBilling();
+onMounted(async () => {
+  await deviceStore.loadDevices();
+  await deviceStore.loadRoutines();
+  await energyStore.loadReadings();
+  await notificationsStore.loadAlerts();
+  await billingStore.loadPlans();
+  await billingStore.loadActiveSubscription();
 });
+
 </script>
 
 <style scoped lang="scss">

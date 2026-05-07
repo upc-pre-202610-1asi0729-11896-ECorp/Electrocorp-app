@@ -1,15 +1,16 @@
 import { defineStore } from 'pinia';
-import { computed, ref, shallowRef } from 'vue';
-import type { User } from '../../domain/model/user.entity';
-import type { AccessProfile } from '../../domain/model/access-profile.entity';
+import { computed, shallowRef, ref } from 'vue';
+
+import { User } from '../../domain/model/user.entity';
+import { AccessProfile } from '../../domain/model/access-profile.entity';
+
 import type { SignInDto } from '../dtos/sign-in.dto';
 import type { SignUpDto } from '../dtos/sign-up.dto';
-import { IamFacade } from '../services/iam.facade';
-import { PasswordPolicyService } from '../../domain/services/password-policy.service';
+
+import { IamApiEndpoint } from '../../infrastructure/api/iam-api-endpoint';
 
 export const useIamStore = defineStore('iam', () => {
-    const facade = new IamFacade();
-    const passwordPolicyService = new PasswordPolicyService();
+    const iamApi = new IamApiEndpoint();
 
     const currentUser = shallowRef<User | null>(null);
     const accessProfiles = shallowRef<AccessProfile[]>([]);
@@ -23,15 +24,28 @@ export const useIamStore = defineStore('iam', () => {
         error.value = null;
 
         try {
-            if (!passwordPolicyService.isValid(payload.password)) {
-                error.value = passwordPolicyService.getMessage();
-                return;
-            }
+            const response = await iamApi.signIn({
+                email: payload.email,
+                password: payload.password,
+            });
 
-            const response = await facade.signIn(payload);
-            currentUser.value = response.user;
-            accessProfiles.value = response.accessProfiles;
-        } catch {
+            currentUser.value = new User({
+                id: response.user.id,
+                fullName: response.user.fullName,
+                email: response.user.email,
+                status: response.user.status,
+            });
+
+            accessProfiles.value = response.accessProfiles.map(
+                (profile) =>
+                    new AccessProfile({
+                        id: profile.id,
+                        name: profile.name,
+                        permissions: profile.permissions,
+                    })
+            );
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo iniciar sesión.';
         } finally {
             loading.value = false;
@@ -43,35 +57,73 @@ export const useIamStore = defineStore('iam', () => {
         error.value = null;
 
         try {
-            if (!passwordPolicyService.isValid(payload.password)) {
-                error.value = passwordPolicyService.getMessage();
-                return;
-            }
+            const response = await iamApi.signUp({
+                fullName: payload.fullName,
+                email: payload.email,
+                password: payload.password,
+            });
 
-            const response = await facade.signUp(payload);
-            currentUser.value = response.user;
-            accessProfiles.value = response.accessProfiles;
-        } catch {
+            currentUser.value = new User({
+                id: response.user.id,
+                fullName: response.user.fullName,
+                email: response.user.email,
+                status: response.user.status,
+            });
+
+            accessProfiles.value = response.accessProfiles.map(
+                (profile) =>
+                    new AccessProfile({
+                        id: profile.id,
+                        name: profile.name,
+                        permissions: profile.permissions,
+                    })
+            );
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo registrar el usuario.';
         } finally {
             loading.value = false;
         }
     }
 
+    async function restoreSession(): Promise<void> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await iamApi.restoreSession();
+
+            if (!response) return;
+
+            currentUser.value = new User({
+                id: response.user.id,
+                fullName: response.user.fullName,
+                email: response.user.email,
+                status: response.user.status,
+            });
+
+            accessProfiles.value = response.accessProfiles.map(
+                (profile) =>
+                    new AccessProfile({
+                        id: profile.id,
+                        name: profile.name,
+                        permissions: profile.permissions,
+                    })
+            );
+        } catch (exception) {
+            console.error(exception);
+            currentUser.value = null;
+            accessProfiles.value = [];
+        } finally {
+            loading.value = false;
+        }
+    }
+
     async function signOut(): Promise<void> {
-        await facade.signOut();
+        await iamApi.signOut();
 
         currentUser.value = null;
         accessProfiles.value = [];
-    }
-
-    async function restoreSession(): Promise<void> {
-        const response = await facade.restoreSession();
-
-        if (!response) return;
-
-        currentUser.value = response.user;
-        accessProfiles.value = response.accessProfiles;
     }
 
     return {
@@ -82,7 +134,7 @@ export const useIamStore = defineStore('iam', () => {
         isAuthenticated,
         signIn,
         signUp,
-        signOut,
         restoreSession,
+        signOut,
     };
 });

@@ -52,8 +52,9 @@ import PlanCard from '../../components/plan-card/PlanCard.vue';
 const { t } = useI18n();
 const billingStore = useBillingStore();
 
-onMounted(() => {
-  billingStore.loadBilling();
+onMounted(async () => {
+  await billingStore.loadPlans();
+  await billingStore.loadActiveSubscription();
 });
 </script>
 

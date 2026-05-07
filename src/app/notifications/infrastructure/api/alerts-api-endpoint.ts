@@ -1,77 +1,54 @@
+import { API_BASE_URL } from '../../../shared/infrastructure/api/api-config';
 import type { AlertResponse } from '../responses/alert.response';
 import type { AlertResource } from '../resources/alert.resource';
 
-const STORAGE_KEY = 'ec.notifications.alerts';
-
 export class AlertsApiEndpoint {
     async findAll(): Promise<AlertResponse[]> {
-        const rawAlerts = localStorage.getItem(STORAGE_KEY);
+        const response = await fetch(`${API_BASE_URL}/alerts`);
 
-        if (!rawAlerts) {
-            const seedAlerts = this.getSeedAlerts();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(seedAlerts));
-            return seedAlerts;
+        if (!response.ok) {
+            throw new Error('Error loading alerts.');
         }
 
-        return JSON.parse(rawAlerts) as AlertResponse[];
+        return response.json();
     }
 
     async create(resource: AlertResource): Promise<AlertResponse> {
-        const alerts = await this.findAll();
+        const response = await fetch(`${API_BASE_URL}/alerts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: Date.now(),
+                title: resource.title,
+                message: resource.message,
+                level: resource.level,
+                createdAt: new Date().toISOString().slice(0, 10),
+                read: false,
+            }),
+        });
 
-        const createdAlert: AlertResponse = {
-            id: Date.now(),
-            title: resource.title,
-            message: resource.message,
-            level: resource.level,
-            createdAt: new Date().toISOString().slice(0, 10),
-            read: false,
-        };
+        if (!response.ok) {
+            throw new Error('Error creating alert.');
+        }
 
-        const updatedAlerts = [createdAlert, ...alerts];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAlerts));
-
-        return createdAlert;
+        return response.json();
     }
 
     async markAsRead(alertId: number): Promise<AlertResponse | null> {
-        const alerts = await this.findAll();
-
-        const updatedAlerts = alerts.map((alert) =>
-            alert.id === alertId ? { ...alert, read: true } : alert
-        );
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAlerts));
-
-        return updatedAlerts.find((alert) => alert.id === alertId) ?? null;
-    }
-
-    private getSeedAlerts(): AlertResponse[] {
-        return [
-            {
-                id: 1,
-                title: 'High consumption detected',
-                message: 'Smart plug - Living room reached an unusual consumption peak.',
-                level: 'CRITICAL',
-                createdAt: '2026-05-05',
-                read: false,
+        const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
             },
-            {
-                id: 2,
-                title: 'Monthly report ready',
-                message: 'Your monthly consumption report is ready to export.',
-                level: 'INFO',
-                createdAt: '2026-05-04',
-                read: false,
-            },
-            {
-                id: 3,
-                title: 'Automation suggestion',
-                message: 'You can schedule your desk lamp to turn off after midnight.',
-                level: 'WARNING',
-                createdAt: '2026-05-03',
-                read: true,
-            },
-        ];
+            body: JSON.stringify({ read: true }),
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        return response.json();
     }
 }

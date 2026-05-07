@@ -89,19 +89,27 @@
     "emptyContent": "Agrega tu primer enchufe, interruptor o luz inteligente para comenzar."
   },
   "energy": {
-    "eyebrow": "Energy Monitoring",
+    "eyebrow": "Monitoreo de energía",
     "title": "Monitoreo de consumo energético",
     "subtitle": "Visualiza el consumo de tus dispositivos, filtra el historial y exporta tus lecturas para análisis.",
     "totalWatts": "Watts totales",
     "averageWatts": "Promedio",
     "highestReading": "Pico máximo",
+    "recommendationTitle": "Recomendación inteligente",
     "chartEyebrow": "Analítica",
     "chartTitle": "Historial de consumo",
+    "device": "Dispositivo",
+    "watts": "Watts",
+    "timestamp": "Fecha y hora",
+    "date": "Fecha",
+    "status": "Estado",
+    "highConsumption": "Alto consumo",
+    "normalConsumption": "Consumo normal",
+    "exportCsv": "Exportar CSV",
     "startDate": "Fecha inicial",
     "endDate": "Fecha final",
     "filter": "Filtrar",
-    "reset": "Restablecer",
-    "exportCsv": "Exportar CSV"
+    "reset": "Restablecer"
   },
   "routines": {
     "eyebrow": "Automatización",

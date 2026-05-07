@@ -89,19 +89,27 @@
     "emptyContent": "Add your first smart plug, switch or light to get started."
   },
   "energy": {
-    "eyebrow": "Energy Monitoring",
+    "eyebrow": "Energy monitoring",
     "title": "Energy consumption monitoring",
-    "subtitle": "View device consumption, filter history and export your readings for analysis.",
+    "subtitle": "View your device consumption, filter the history and export your readings for analysis.",
     "totalWatts": "Total watts",
     "averageWatts": "Average",
-    "highestReading": "Peak usage",
+    "highestReading": "Peak maximum",
+    "recommendationTitle": "Smart recommendation",
     "chartEyebrow": "Analytics",
     "chartTitle": "Consumption history",
+    "device": "Device",
+    "watts": "Watts",
+    "timestamp": "Date and time",
+    "date": "Date",
+    "status": "Status",
+    "highConsumption": "High consumption",
+    "normalConsumption": "Normal consumption",
+    "exportCsv": "Export CSV",
     "startDate": "Start date",
     "endDate": "End date",
     "filter": "Filter",
-    "reset": "Reset",
-    "exportCsv": "Export CSV"
+    "reset": "Reset"
   },
   "routines": {
     "eyebrow": "Automation",

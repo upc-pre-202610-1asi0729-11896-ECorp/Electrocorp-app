@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
-import { computed, shallowRef, ref } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
+
 import type { Plan } from '../../domain/model/plan.entity';
+import type { PlanCode } from '../../domain/model/plan.entity';
 import type { Subscription } from '../../domain/model/subscription.entity';
 import { BillingFacade } from '../services/billing.facade';
 
@@ -9,37 +11,55 @@ export const useBillingStore = defineStore('billing', () => {
 
     const plans = shallowRef<Plan[]>([]);
     const activeSubscription = shallowRef<Subscription | null>(null);
+
     const loading = ref(false);
     const error = ref<string | null>(null);
 
-    const hasActiveSubscription = computed(() =>
-        activeSubscription.value?.status === 'ACTIVE'
+    const activePlanCode = computed(() => activeSubscription.value?.planCode ?? null);
+
+    const activePlan = computed(() =>
+        plans.value.find((plan) => plan.code === activePlanCode.value) ?? null
     );
 
-    async function loadBilling(): Promise<void> {
+    async function loadPlans(): Promise<void> {
         loading.value = true;
         error.value = null;
 
         try {
             plans.value = await facade.getPlans();
-            activeSubscription.value = await facade.getActiveSubscription();
-        } catch {
-            error.value = 'No se pudo cargar la información de planes.';
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudieron cargar los planes.';
         } finally {
             loading.value = false;
         }
     }
 
-    async function subscribe(plan: Plan): Promise<void> {
+    async function loadActiveSubscription(): Promise<void> {
         loading.value = true;
         error.value = null;
 
         try {
-            activeSubscription.value = await facade.createSubscription({
-                planCode: plan.code,
+            activeSubscription.value = await facade.getActiveSubscription();
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudo cargar la suscripción activa.';
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function subscribe(planCode: PlanCode): Promise<void> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            activeSubscription.value = await facade.subscribe({
+                planCode,
             });
-        } catch {
-            error.value = 'No se pudo crear la suscripción.';
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudo procesar la suscripción.';
         } finally {
             loading.value = false;
         }
@@ -52,10 +72,10 @@ export const useBillingStore = defineStore('billing', () => {
         error.value = null;
 
         try {
-            activeSubscription.value = await facade.cancelSubscription({
-                subscriptionId: activeSubscription.value.id,
-            });
-        } catch {
+            await facade.cancelSubscription(activeSubscription.value.id);
+            activeSubscription.value = null;
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo cancelar la suscripción.';
         } finally {
             loading.value = false;
@@ -65,10 +85,12 @@ export const useBillingStore = defineStore('billing', () => {
     return {
         plans,
         activeSubscription,
+        activePlanCode,
+        activePlan,
         loading,
         error,
-        hasActiveSubscription,
-        loadBilling,
+        loadPlans,
+        loadActiveSubscription,
         subscribe,
         cancelSubscription,
     };

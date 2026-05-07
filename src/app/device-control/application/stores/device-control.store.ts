@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef } from 'vue';
-import type { Device } from '../../domain/model/device.entity';
 import { Routine } from '../../domain/model/routine.entity';
+import type { Device } from '../../domain/model/device.entity';
 import type { CreateDeviceDto } from '../dtos/create-device.dto';
 import type { CreateRoutineDto } from '../dtos/create-routine.dto';
 import { DeviceControlFacade } from '../services/device-control.facade';
@@ -12,24 +12,7 @@ export const useDeviceControlStore = defineStore('device-control', () => {
     const routineConflictChecker = new RoutineConflictCheckerService();
 
     const devices = shallowRef<Device[]>([]);
-    const routines = shallowRef<Routine[]>([
-        new Routine({
-            id: 1,
-            name: 'Turn off living room at night',
-            deviceId: 1,
-            action: 'TURN_OFF',
-            scheduledTime: '23:00',
-            enabled: true,
-        }),
-        new Routine({
-            id: 2,
-            name: 'Turn on desk lamp',
-            deviceId: 3,
-            action: 'TURN_ON',
-            scheduledTime: '19:00',
-            enabled: true,
-        }),
-    ]);
+    const routines = shallowRef<Routine[]>([]);
 
     const loading = ref(false);
     const error = ref<string | null>(null);
@@ -58,8 +41,23 @@ export const useDeviceControlStore = defineStore('device-control', () => {
 
         try {
             devices.value = await facade.getDevices();
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudieron cargar los dispositivos.';
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function loadRoutines(): Promise<void> {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            routines.value = await facade.getRoutines();
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudieron cargar las rutinas.';
         } finally {
             loading.value = false;
         }
@@ -72,7 +70,8 @@ export const useDeviceControlStore = defineStore('device-control', () => {
         try {
             const createdDevice = await facade.createDevice(payload);
             devices.value = [...devices.value, createdDevice];
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo crear el dispositivo.';
         } finally {
             loading.value = false;
@@ -102,7 +101,8 @@ export const useDeviceControlStore = defineStore('device-control', () => {
             devices.value = devices.value.map((device) =>
                 device.id === deviceId ? updatedDevice : device
             );
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo actualizar el estado del dispositivo.';
         }
     }
@@ -112,56 +112,83 @@ export const useDeviceControlStore = defineStore('device-control', () => {
 
         try {
             await facade.deleteDevice(deviceId);
+
             devices.value = devices.value.filter((device) => device.id !== deviceId);
             routines.value = routines.value.filter((routine) => routine.deviceId !== deviceId);
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             error.value = 'No se pudo eliminar el dispositivo.';
         }
     }
 
-    function addRoutine(payload: CreateRoutineDto): void {
+    async function addRoutine(payload: CreateRoutineDto): Promise<void> {
+        loading.value = true;
         error.value = null;
 
-        const newRoutine = new Routine({
-            id: Date.now(),
-            name: payload.name,
-            deviceId: payload.deviceId,
-            action: payload.action,
-            scheduledTime: payload.scheduledTime,
-            enabled: true,
-        });
-
-        const hasConflict = routineConflictChecker.hasConflict(newRoutine, routines.value);
-
-        if (hasConflict) {
-            error.value = 'Ya existe una rutina activa para ese dispositivo en el mismo horario.';
-            return;
-        }
-
-        routines.value = [newRoutine, ...routines.value];
-    }
-
-    function toggleRoutine(routineId: number): void {
-        routines.value = routines.value.map((routine) => {
-            if (routine.id !== routineId) return routine;
-
-            const updatedRoutine = new Routine({
-                id: routine.id,
-                name: routine.name,
-                deviceId: routine.deviceId,
-                action: routine.action,
-                scheduledTime: routine.scheduledTime,
-                enabled: routine.enabled,
+        try {
+            const candidateRoutine = new Routine({
+                id: Date.now(),
+                name: payload.name,
+                deviceId: payload.deviceId,
+                action: payload.action,
+                scheduledTime: payload.scheduledTime,
+                enabled: true,
             });
 
-            updatedRoutine.toggleEnabled();
+            const hasConflict = routineConflictChecker.hasConflict(
+                candidateRoutine,
+                routines.value
+            );
 
-            return updatedRoutine;
-        });
+            if (hasConflict) {
+                error.value = 'Ya existe una rutina activa para ese dispositivo en el mismo horario.';
+                return;
+            }
+
+            const createdRoutine = await facade.createRoutine(payload);
+            routines.value = [createdRoutine, ...routines.value];
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudo crear la rutina.';
+        } finally {
+            loading.value = false;
+        }
     }
 
-    function removeRoutine(routineId: number): void {
-        routines.value = routines.value.filter((routine) => routine.id !== routineId);
+    async function toggleRoutine(routineId: number): Promise<void> {
+        error.value = null;
+
+        const currentRoutine = routines.value.find((routine) => routine.id === routineId);
+
+        if (!currentRoutine) return;
+
+        try {
+            const updatedRoutine = await facade.updateRoutineEnabled(
+                routineId,
+                !currentRoutine.enabled
+            );
+
+            if (!updatedRoutine) return;
+
+            routines.value = routines.value.map((routine) =>
+                routine.id === routineId ? updatedRoutine : routine
+            );
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudo actualizar la rutina.';
+        }
+    }
+
+    async function removeRoutine(routineId: number): Promise<void> {
+        error.value = null;
+
+        try {
+            await facade.deleteRoutine(routineId);
+            routines.value = routines.value.filter((routine) => routine.id !== routineId);
+        } catch (exception) {
+            console.error(exception);
+            error.value = 'No se pudo eliminar la rutina.';
+        }
     }
 
     function getDeviceName(deviceId: number): string {
@@ -179,6 +206,7 @@ export const useDeviceControlStore = defineStore('device-control', () => {
         totalRoutines,
         enabledRoutines,
         loadDevices,
+        loadRoutines,
         addDevice,
         toggleDevice,
         removeDevice,

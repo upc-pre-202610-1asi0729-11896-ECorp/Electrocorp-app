@@ -95,6 +95,7 @@ const scheduledTime = ref('23:00');
 
 onMounted(() => {
   deviceStore.loadDevices();
+  deviceStore.loadRoutines();
 });
 
 function handleSubmit() {

@@ -1,20 +1,27 @@
+import { API_BASE_URL } from '../../../shared/infrastructure/api/api-config';
 import type { SubscriptionResponse } from '../responses/subscription.response';
 import type { SubscriptionResource } from '../resources/subscription.resource';
 
-const STORAGE_KEY = 'ec.billing.subscription';
-
 export class SubscriptionsApiEndpoint {
     async findActive(): Promise<SubscriptionResponse | null> {
-        const rawSubscription = localStorage.getItem(STORAGE_KEY);
+        const response = await fetch(`${API_BASE_URL}/subscriptions?status=ACTIVE`);
 
-        if (!rawSubscription) {
-            return null;
+        if (!response.ok) {
+            throw new Error('Error loading active subscription.');
         }
 
-        return JSON.parse(rawSubscription) as SubscriptionResponse;
+        const subscriptions = (await response.json()) as SubscriptionResponse[];
+
+        return subscriptions[0] ?? null;
     }
 
     async create(resource: SubscriptionResource): Promise<SubscriptionResponse> {
+        const currentSubscription = await this.findActive();
+
+        if (currentSubscription) {
+            await this.cancel(currentSubscription.id);
+        }
+
         const subscription: SubscriptionResponse = {
             id: Date.now(),
             planCode: resource.planCode,
@@ -23,26 +30,39 @@ export class SubscriptionsApiEndpoint {
             endsAt: null,
         };
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(subscription));
+        const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(subscription),
+        });
 
-        return subscription;
+        if (!response.ok) {
+            throw new Error('Error creating subscription.');
+        }
+
+        return response.json();
     }
 
     async cancel(subscriptionId: number): Promise<SubscriptionResponse | null> {
-        const currentSubscription = await this.findActive();
-
-        if (!currentSubscription || currentSubscription.id !== subscriptionId) {
-            return null;
-        }
-
-        const canceledSubscription: SubscriptionResponse = {
-            ...currentSubscription,
+        const canceledSubscription = {
             status: 'CANCELED',
             endsAt: new Date().toISOString().slice(0, 10),
         };
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(canceledSubscription));
+        const response = await fetch(`${API_BASE_URL}/subscriptions/${subscriptionId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(canceledSubscription),
+        });
 
-        return canceledSubscription;
+        if (!response.ok) {
+            return null;
+        }
+
+        return response.json();
     }
 }
