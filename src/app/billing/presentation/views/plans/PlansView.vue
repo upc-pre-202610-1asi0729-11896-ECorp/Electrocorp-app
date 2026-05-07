@@ -13,7 +13,7 @@
         <small>{{ billingStore.activeSubscription.status }}</small>
 
         <button
-          v-if="billingStore.hasActiveSubscription"
+          v-if="billingStore.activeSubscription?.status === 'ACTIVE'"
           type="button"
           class="cancel-btn"
           @click="billingStore.cancelSubscription"
@@ -37,7 +37,7 @@
           billingStore.activeSubscription?.planCode === plan.code &&
           billingStore.activeSubscription?.status === 'ACTIVE'
         "
-        @subscribe="billingStore.subscribe"
+        @subscribe="handleSubscribe"
       />
     </div>
   </section>
@@ -48,6 +48,7 @@ import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBillingStore } from '../../../application/stores/billing.store';
 import PlanCard from '../../components/plan-card/PlanCard.vue';
+import type { Plan } from '../../../domain/model/plan.entity';
 
 const { t } = useI18n();
 const billingStore = useBillingStore();
@@ -56,6 +57,11 @@ onMounted(async () => {
   await billingStore.loadPlans();
   await billingStore.loadActiveSubscription();
 });
+
+async function handleSubscribe(plan: Plan): Promise<void> {
+  await billingStore.subscribe(plan.code);
+}
+
 </script>
 
 <style scoped lang="scss">

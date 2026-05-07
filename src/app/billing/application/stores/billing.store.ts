@@ -9,6 +9,8 @@ import { BillingFacade } from '../services/billing.facade';
 export const useBillingStore = defineStore('billing', () => {
     const facade = new BillingFacade();
 
+    const hasActiveSubscription = computed(() => activeSubscription.value !== null);
+
     const plans = shallowRef<Plan[]>([]);
     const activeSubscription = shallowRef<Subscription | null>(null);
 
@@ -93,5 +95,6 @@ export const useBillingStore = defineStore('billing', () => {
         loadActiveSubscription,
         subscribe,
         cancelSubscription,
+        hasActiveSubscription,
     };
 });
