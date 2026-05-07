@@ -1,0 +1,786 @@
+@startuml
+title ElectroCorp WebApp - Frontend Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+    ArrowColor #333333
+}
+
+skinparam package {
+    BackgroundColor #F8F8F8
+    BorderColor #333333
+}
+
+' =========================================================
+' SHARED
+' =========================================================
+
+package "shared" {
+    class AppLayout <<Vue Component>> {
+        +switchLanguage(language: AppLanguage): void
+        +handleSignOut(): Promise<void>
+    }
+
+    class FooterContent <<Vue Component>>
+
+    class HomeView <<Vue View>>
+    class AboutView <<Vue View>>
+    class NotFoundView <<Vue View>>
+
+    class UiStore <<Pinia Store>> {
+        -language: AppLanguage
+        -darkMode: boolean
+        +setLanguage(value: AppLanguage): void
+        +toggleDarkMode(): void
+        +restoreUiPreferences(): void
+    }
+
+    class ThemeService {
+        +applyTheme(isDarkMode: boolean): void
+    }
+
+    class ApiConfig <<Infrastructure>> {
+        +API_BASE_URL: string
+    }
+
+    enum AppLanguage {
+        es
+        en
+        pt
+    }
+}
+
+' =========================================================
+' IAM
+' =========================================================
+
+package "iam" {
+    class LoginView <<Vue View>> {
+        -email: string
+        -password: string
+        +handleSubmit(): Promise<void>
+    }
+
+    class RegisterView <<Vue View>> {
+        -fullName: string
+        -email: string
+        -password: string
+        +handleSubmit(): Promise<void>
+    }
+
+    class IamStore <<Pinia Store>> {
+        -currentUser: User
+        -accessProfiles: AccessProfile[]
+        -loading: boolean
+        -error: string
+        +isAuthenticated: boolean
+        +signIn(payload: SignInDto): Promise<void>
+        +signUp(payload: SignUpDto): Promise<void>
+        +restoreSession(): Promise<void>
+        +signOut(): Promise<void>
+    }
+
+    class IamApiEndpoint <<API Endpoint>> {
+        +signIn(resource: SignInResource): Promise<AuthResponse>
+        +signUp(resource: SignUpResource): Promise<AuthResponse>
+        +restoreSession(): Promise<AuthResponse>
+        +signOut(): Promise<void>
+    }
+
+    class User {
+        -id: number
+        -fullName: string
+        -email: string
+        -status: UserStatus
+        +get id(): number
+        +get fullName(): string
+        +get email(): string
+        +get status(): UserStatus
+    }
+
+    class AccessProfile {
+        -id: number
+        -name: string
+        -permissions: string[]
+        +get id(): number
+        +get name(): string
+        +get permissions(): string[]
+    }
+
+    enum UserStatus {
+        ACTIVE
+        BLOCKED
+    }
+
+    class SignInDto <<DTO>> {
+        +email: string
+        +password: string
+    }
+
+    class SignUpDto <<DTO>> {
+        +fullName: string
+        +email: string
+        +password: string
+    }
+
+    class SignInResource <<Resource>> {
+        +email: string
+        +password: string
+    }
+
+    class SignUpResource <<Resource>> {
+        +fullName: string
+        +email: string
+        +password: string
+    }
+
+    class AuthResponse <<Response>> {
+        +user: UserResponse
+        +accessProfiles: AccessProfileResponse[]
+    }
+
+    class UserResponse <<Response>> {
+        +id: number
+        +fullName: string
+        +email: string
+        +status: UserStatus
+    }
+
+    class AccessProfileResponse <<Response>> {
+        +id: number
+        +name: string
+        +permissions: string[]
+    }
+
+    class UserAssembler {
+        +toEntity(response: UserResponse): User
+    }
+
+    class AccessProfileAssembler {
+        +toEntity(response: AccessProfileResponse): AccessProfile
+    }
+}
+
+' =========================================================
+' DEVICE CONTROL
+' =========================================================
+
+package "device-control" {
+    class DevicesView <<Vue View>> {
+        -name: string
+        -room: string
+        -type: DeviceType
+        -powerWatts: number
+        +handleSubmit(): Promise<void>
+    }
+
+    class RoutinesView <<Vue View>> {
+        -name: string
+        -deviceId: number
+        -action: RoutineAction
+        -scheduledTime: string
+        +handleSubmit(): Promise<void>
+    }
+
+    class DeviceList <<Vue Component>>
+    class DeviceCard <<Vue Component>>
+    class RoutineList <<Vue Component>>
+
+    class DeviceControlStore <<Pinia Store>> {
+        -devices: Device[]
+        -routines: Routine[]
+        -loading: boolean
+        -error: string
+        +totalDevices: number
+        +activeDevices: number
+        +totalCurrentWatts: number
+        +totalRoutines: number
+        +enabledRoutines: number
+        +loadDevices(): Promise<void>
+        +loadRoutines(): Promise<void>
+        +addDevice(payload: CreateDeviceDto): Promise<void>
+        +toggleDevice(deviceId: number): Promise<void>
+        +removeDevice(deviceId: number): Promise<void>
+        +addRoutine(payload: CreateRoutineDto): Promise<void>
+        +toggleRoutine(routineId: number): Promise<void>
+        +removeRoutine(routineId: number): Promise<void>
+        +getDeviceName(deviceId: number): string
+    }
+
+    class DeviceControlFacade <<Application Service>> {
+        +getDevices(): Promise<Device[]>
+        +createDevice(payload: CreateDeviceDto): Promise<Device>
+        +updateDeviceStatus(payload: UpdateDeviceStatusDto): Promise<Device>
+        +deleteDevice(deviceId: number): Promise<void>
+        +getRoutines(): Promise<Routine[]>
+        +createRoutine(payload: CreateRoutineDto): Promise<Routine>
+        +updateRoutineEnabled(routineId: number, enabled: boolean): Promise<Routine>
+        +deleteRoutine(routineId: number): Promise<void>
+    }
+
+    class DevicesApiEndpoint <<API Endpoint>> {
+        +findAll(): Promise<DeviceResponse[]>
+        +create(resource: DeviceResource): Promise<DeviceResponse>
+        +updateStatus(deviceId: number, status: DeviceStatus): Promise<DeviceResponse>
+        +delete(deviceId: number): Promise<void>
+    }
+
+    class RoutinesApiEndpoint <<API Endpoint>> {
+        +findAll(): Promise<RoutineResponse[]>
+        +create(resource: RoutineResource): Promise<RoutineResponse>
+        +updateEnabled(routineId: number, enabled: boolean): Promise<RoutineResponse>
+        +delete(routineId: number): Promise<void>
+    }
+
+    class Device {
+        -id: number
+        -name: string
+        -room: string
+        -type: DeviceType
+        -status: DeviceStatus
+        -powerWatts: number
+        +toggleStatus(): void
+    }
+
+    class Routine {
+        -id: number
+        -name: string
+        -deviceId: number
+        -action: RoutineAction
+        -scheduledTime: string
+        -enabled: boolean
+        +toggleEnabled(): void
+    }
+
+    enum DeviceType {
+        SMART_PLUG
+        SMART_SWITCH
+        LIGHT
+    }
+
+    enum DeviceStatus {
+        ON
+        OFF
+    }
+
+    enum RoutineAction {
+        TURN_ON
+        TURN_OFF
+    }
+
+    class CreateDeviceDto <<DTO>> {
+        +name: string
+        +room: string
+        +type: DeviceType
+        +powerWatts: number
+    }
+
+    class UpdateDeviceStatusDto <<DTO>> {
+        +deviceId: number
+        +status: DeviceStatus
+    }
+
+    class CreateRoutineDto <<DTO>> {
+        +name: string
+        +deviceId: number
+        +action: RoutineAction
+        +scheduledTime: string
+    }
+
+    class DeviceResource <<Resource>> {
+        +name: string
+        +room: string
+        +type: DeviceType
+        +powerWatts: number
+    }
+
+    class RoutineResource <<Resource>> {
+        +name: string
+        +deviceId: number
+        +action: RoutineAction
+        +scheduledTime: string
+        +enabled: boolean
+    }
+
+    class DeviceResponse <<Response>> {
+        +id: number
+        +name: string
+        +room: string
+        +type: DeviceType
+        +status: DeviceStatus
+        +powerWatts: number
+    }
+
+    class RoutineResponse <<Response>> {
+        +id: number
+        +name: string
+        +deviceId: number
+        +action: RoutineAction
+        +scheduledTime: string
+        +enabled: boolean
+    }
+
+    class DeviceAssembler {
+        +toEntity(response: DeviceResponse): Device
+        +toResource(device: Device): DeviceResource
+    }
+
+    class RoutineAssembler {
+        +toEntity(response: RoutineResponse): Routine
+        +toResource(routine: Routine): RoutineResource
+    }
+
+    class RoutineConflictCheckerService <<Domain Service>> {
+        +hasConflict(candidate: Routine, routines: Routine[]): boolean
+    }
+}
+
+' =========================================================
+' ENERGY MONITORING
+' =========================================================
+
+package "energy-monitoring" {
+    class EnergyDashboardView <<Vue View>> {
+        -startDate: string
+        -endDate: string
+        +handleFilter(): void
+        +handleReset(): void
+    }
+
+    class EnergyHistoryView <<Vue View>>
+
+    class MetricsCards <<Vue Component>>
+    class UsageChart <<Vue Component>> {
+        +getBarHeight(watts: number): number
+    }
+
+    class EnergyMonitoringStore <<Pinia Store>> {
+        -readings: EnergyReading[]
+        -loading: boolean
+        -error: string
+        +totalWatts: number
+        +averageWatts: number
+        +highestReading: number
+        +recommendation: string
+        +loadReadings(): Promise<void>
+        +filterReadings(payload: FilterReadingsDto): Promise<void>
+        +exportCsv(): void
+    }
+
+    class EnergyMonitoringFacade <<Application Service>> {
+        +getReadings(): Promise<EnergyReading[]>
+        +filterReadings(payload: FilterReadingsDto): Promise<EnergyReading[]>
+    }
+
+    class ReadingsApiEndpoint <<API Endpoint>> {
+        +findAll(): Promise<EnergyReadingResponse[]>
+        +findByDateRange(startDate: string, endDate: string): Promise<EnergyReadingResponse[]>
+    }
+
+    class EnergyReading {
+        -id: number
+        -deviceName: string
+        -watts: number
+        -recordedAt: string
+    }
+
+    class EnergyReadingResponse <<Response>> {
+        +id: number
+        +deviceName: string
+        +watts: number
+        +recordedAt: string
+    }
+
+    class EnergyReadingAssembler {
+        +toEntity(response: EnergyReadingResponse): EnergyReading
+    }
+
+    class EnergyRecommendationService <<Domain Service>> {
+        +generateRecommendation(readings: EnergyReading[]): string
+    }
+
+    class FilterReadingsDto <<DTO>> {
+        +startDate: string
+        +endDate: string
+    }
+}
+
+' =========================================================
+' BILLING
+' =========================================================
+
+package "billing" {
+    class PlansView <<Vue View>> {
+        +handleSubscribe(plan: Plan): Promise<void>
+    }
+
+    class PlanCard <<Vue Component>>
+
+    class BillingStore <<Pinia Store>> {
+        -plans: Plan[]
+        -activeSubscription: Subscription
+        -loading: boolean
+        -error: string
+        +activePlanCode: PlanCode
+        +activePlan: Plan
+        +hasActiveSubscription: boolean
+        +loadPlans(): Promise<void>
+        +loadActiveSubscription(): Promise<void>
+        +subscribe(planCode: PlanCode): Promise<void>
+        +cancelSubscription(): Promise<void>
+    }
+
+    class BillingFacade <<Application Service>> {
+        +getPlans(): Promise<Plan[]>
+        +getActiveSubscription(): Promise<Subscription>
+        +subscribe(resource: SubscriptionResource): Promise<Subscription>
+        +cancelSubscription(subscriptionId: number): Promise<Subscription>
+    }
+
+    class PlansApiEndpoint <<API Endpoint>> {
+        +findAll(): Promise<PlanResponse[]>
+    }
+
+    class SubscriptionsApiEndpoint <<API Endpoint>> {
+        +findActive(): Promise<SubscriptionResponse>
+        +create(resource: SubscriptionResource): Promise<SubscriptionResponse>
+        +cancel(subscriptionId: number): Promise<SubscriptionResponse>
+    }
+
+    class Plan {
+        -id: number
+        -code: PlanCode
+        -name: string
+        -monthlyPrice: number
+        -features: string[]
+    }
+
+    class Subscription {
+        -id: number
+        -planCode: PlanCode
+        -status: SubscriptionStatus
+        -startedAt: string
+        -endsAt: string
+    }
+
+    enum PlanCode {
+        STARTER
+        PROFESSIONAL
+        ENTERPRISE
+    }
+
+    enum SubscriptionStatus {
+        ACTIVE
+        CANCELED
+    }
+
+    class PlanResource <<Resource>> {
+        +code: PlanCode
+        +name: string
+        +monthlyPrice: number
+        +features: string[]
+    }
+
+    class SubscriptionResource <<Resource>> {
+        +planCode: PlanCode
+    }
+
+    class PlanResponse <<Response>> {
+        +id: number
+        +code: PlanCode
+        +name: string
+        +monthlyPrice: number
+        +features: string[]
+    }
+
+    class SubscriptionResponse <<Response>> {
+        +id: number
+        +planCode: PlanCode
+        +status: SubscriptionStatus
+        +startedAt: string
+        +endsAt: string
+    }
+
+    class PlanAssembler {
+        +toEntity(response: PlanResponse): Plan
+    }
+
+    class SubscriptionAssembler {
+        +toEntity(response: SubscriptionResponse): Subscription
+    }
+}
+
+' =========================================================
+' NOTIFICATIONS
+' =========================================================
+
+package "notifications" {
+    class AlertsView <<Vue View>> {
+        -title: string
+        -message: string
+        -level: AlertLevel
+        +handleSubmit(): Promise<void>
+    }
+
+    class AlertList <<Vue Component>>
+
+    class NotificationsStore <<Pinia Store>> {
+        -alerts: Alert[]
+        -loading: boolean
+        -error: string
+        +unreadCount: number
+        +sortedAlerts: Alert[]
+        +loadAlerts(): Promise<void>
+        +sendAlert(payload: CreateAlertDto): Promise<void>
+        +markAsRead(alertId: number): Promise<void>
+    }
+
+    class NotificationsFacade <<Application Service>> {
+        +getAlerts(): Promise<Alert[]>
+        +createAlert(payload: CreateAlertDto): Promise<Alert>
+        +markAlertAsRead(alertId: number): Promise<Alert>
+    }
+
+    class AlertsApiEndpoint <<API Endpoint>> {
+        +findAll(): Promise<AlertResponse[]>
+        +create(resource: AlertResource): Promise<AlertResponse>
+        +markAsRead(alertId: number): Promise<AlertResponse>
+    }
+
+    class Alert {
+        -id: number
+        -title: string
+        -message: string
+        -level: AlertLevel
+        -createdAt: string
+        -read: boolean
+        +markAsRead(): void
+    }
+
+    enum AlertLevel {
+        INFO
+        WARNING
+        CRITICAL
+    }
+
+    class CreateAlertDto <<DTO>> {
+        +title: string
+        +message: string
+        +level: AlertLevel
+    }
+
+    class AlertResource <<Resource>> {
+        +title: string
+        +message: string
+        +level: AlertLevel
+    }
+
+    class AlertResponse <<Response>> {
+        +id: number
+        +title: string
+        +message: string
+        +level: AlertLevel
+        +createdAt: string
+        +read: boolean
+    }
+
+    class AlertAssembler {
+        +toEntity(response: AlertResponse): Alert
+        +toResource(alert: Alert): AlertResource
+    }
+}
+
+' =========================================================
+' SHARED RELATIONSHIPS
+' =========================================================
+
+AppLayout --> UiStore
+AppLayout --> IamStore
+AppLayout --> FooterContent
+UiStore --> ThemeService
+UiStore --> AppLanguage
+
+HomeView --> DeviceControlStore
+HomeView --> EnergyMonitoringStore
+HomeView --> NotificationsStore
+HomeView --> BillingStore
+
+DevicesApiEndpoint --> ApiConfig
+RoutinesApiEndpoint --> ApiConfig
+ReadingsApiEndpoint --> ApiConfig
+AlertsApiEndpoint --> ApiConfig
+PlansApiEndpoint --> ApiConfig
+SubscriptionsApiEndpoint --> ApiConfig
+IamApiEndpoint --> ApiConfig
+
+' =========================================================
+' IAM RELATIONSHIPS
+' =========================================================
+
+LoginView --> IamStore
+RegisterView --> IamStore
+
+IamStore --> IamApiEndpoint
+IamStore --> User
+IamStore --> AccessProfile
+IamStore --> SignInDto
+IamStore --> SignUpDto
+
+SignInDto ..> SignInResource : maps to
+SignUpDto ..> SignUpResource : maps to
+
+IamApiEndpoint --> SignInResource
+IamApiEndpoint --> SignUpResource
+IamApiEndpoint --> AuthResponse
+AuthResponse --> UserResponse
+AuthResponse --> AccessProfileResponse
+
+UserAssembler --> UserResponse
+UserAssembler --> User
+AccessProfileAssembler --> AccessProfileResponse
+AccessProfileAssembler --> AccessProfile
+
+User --> UserStatus
+
+' =========================================================
+' DEVICE CONTROL RELATIONSHIPS
+' =========================================================
+
+DevicesView --> DeviceControlStore
+RoutinesView --> DeviceControlStore
+
+DeviceList --> DeviceCard
+DeviceList --> Device
+DeviceCard --> Device
+RoutineList --> Routine
+
+DeviceControlStore --> DeviceControlFacade
+DeviceControlStore --> Device
+DeviceControlStore --> Routine
+DeviceControlStore --> CreateDeviceDto
+DeviceControlStore --> CreateRoutineDto
+DeviceControlStore --> RoutineConflictCheckerService
+
+DeviceControlFacade --> DevicesApiEndpoint
+DeviceControlFacade --> RoutinesApiEndpoint
+DeviceControlFacade --> DeviceAssembler
+DeviceControlFacade --> RoutineAssembler
+DeviceControlFacade --> CreateDeviceDto
+DeviceControlFacade --> CreateRoutineDto
+DeviceControlFacade --> UpdateDeviceStatusDto
+
+DevicesApiEndpoint --> DeviceResource
+DevicesApiEndpoint --> DeviceResponse
+RoutinesApiEndpoint --> RoutineResource
+RoutinesApiEndpoint --> RoutineResponse
+
+DeviceAssembler --> DeviceResponse
+DeviceAssembler --> DeviceResource
+DeviceAssembler --> Device
+
+RoutineAssembler --> RoutineResponse
+RoutineAssembler --> RoutineResource
+RoutineAssembler --> Routine
+
+Device --> DeviceType
+Device --> DeviceStatus
+Routine --> RoutineAction
+Routine --> Device : uses deviceId
+CreateDeviceDto --> DeviceType
+CreateRoutineDto --> RoutineAction
+UpdateDeviceStatusDto --> DeviceStatus
+
+' =========================================================
+' ENERGY RELATIONSHIPS
+' =========================================================
+
+EnergyDashboardView --> EnergyMonitoringStore
+EnergyHistoryView --> EnergyMonitoringStore
+MetricsCards --> EnergyMonitoringStore
+UsageChart --> EnergyReading
+
+EnergyMonitoringStore --> EnergyMonitoringFacade
+EnergyMonitoringStore --> EnergyReading
+EnergyMonitoringStore --> FilterReadingsDto
+EnergyMonitoringStore --> EnergyRecommendationService
+
+EnergyMonitoringFacade --> ReadingsApiEndpoint
+EnergyMonitoringFacade --> EnergyReadingAssembler
+EnergyMonitoringFacade --> FilterReadingsDto
+
+ReadingsApiEndpoint --> EnergyReadingResponse
+EnergyReadingAssembler --> EnergyReadingResponse
+EnergyReadingAssembler --> EnergyReading
+EnergyRecommendationService --> EnergyReading
+
+' =========================================================
+' BILLING RELATIONSHIPS
+' =========================================================
+
+PlansView --> BillingStore
+PlansView --> PlanCard
+PlansView --> Plan
+
+PlanCard --> Plan
+
+BillingStore --> BillingFacade
+BillingStore --> Plan
+BillingStore --> Subscription
+BillingStore --> PlanCode
+
+BillingFacade --> PlansApiEndpoint
+BillingFacade --> SubscriptionsApiEndpoint
+BillingFacade --> PlanAssembler
+BillingFacade --> SubscriptionAssembler
+BillingFacade --> SubscriptionResource
+
+PlansApiEndpoint --> PlanResponse
+SubscriptionsApiEndpoint --> SubscriptionResource
+SubscriptionsApiEndpoint --> SubscriptionResponse
+
+PlanAssembler --> PlanResponse
+PlanAssembler --> Plan
+SubscriptionAssembler --> SubscriptionResponse
+SubscriptionAssembler --> Subscription
+
+Plan --> PlanCode
+Subscription --> PlanCode
+Subscription --> SubscriptionStatus
+SubscriptionResource --> PlanCode
+
+' =========================================================
+' NOTIFICATIONS RELATIONSHIPS
+' =========================================================
+
+AlertsView --> NotificationsStore
+AlertsView --> AlertList
+
+AlertList --> Alert
+
+NotificationsStore --> NotificationsFacade
+NotificationsStore --> Alert
+NotificationsStore --> CreateAlertDto
+
+NotificationsFacade --> AlertsApiEndpoint
+NotificationsFacade --> AlertAssembler
+NotificationsFacade --> CreateAlertDto
+
+AlertsApiEndpoint --> AlertResource
+AlertsApiEndpoint --> AlertResponse
+
+AlertAssembler --> AlertResponse
+AlertAssembler --> AlertResource
+AlertAssembler --> Alert
+
+Alert --> AlertLevel
+CreateAlertDto --> AlertLevel
+AlertResource --> AlertLevel
+AlertResponse --> AlertLevel
+
+@enduml

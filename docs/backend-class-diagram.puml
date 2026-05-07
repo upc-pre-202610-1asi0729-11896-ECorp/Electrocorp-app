@@ -1,0 +1,914 @@
+@startuml
+title ElectroCorp Platform - Backend Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+    ArrowColor #333333
+}
+
+skinparam package {
+    BackgroundColor #F8F8F8
+    BorderColor #333333
+}
+
+' =========================================================
+' SHARED KERNEL
+' =========================================================
+
+package "shared" {
+    abstract class BaseEntity {
+        -id: Long
+        -createdAt: LocalDateTime
+        -updatedAt: LocalDateTime
+        +getId(): Long
+        +getCreatedAt(): LocalDateTime
+        +getUpdatedAt(): LocalDateTime
+    }
+
+    class ApiResponse<T> {
+        -success: boolean
+        -message: String
+        -data: T
+        +success(data: T): ApiResponse<T>
+        +error(message: String): ApiResponse<T>
+    }
+
+    class GlobalExceptionHandler <<ControllerAdvice>> {
+        +handleRuntimeException(exception: RuntimeException): ResponseEntity<ApiResponse<?>>
+        +handleValidationException(exception: MethodArgumentNotValidException): ResponseEntity<ApiResponse<?>>
+    }
+
+    class JwtService {
+        +generateToken(user: User): String
+        +validateToken(token: String): boolean
+        +extractEmail(token: String): String
+    }
+
+    class PasswordEncoderService {
+        +encode(rawPassword: String): String
+        +matches(rawPassword: String, encodedPassword: String): boolean
+    }
+}
+
+' =========================================================
+' IAM
+' =========================================================
+
+package "iam" {
+    class AuthController <<RestController>> {
+        +signIn(request: SignInRequest): ResponseEntity<AuthResponse>
+        +signUp(request: SignUpRequest): ResponseEntity<AuthResponse>
+        +me(): ResponseEntity<UserResponse>
+    }
+
+    class UserController <<RestController>> {
+        +getAll(): ResponseEntity<List<UserResponse>>
+        +getById(id: Long): ResponseEntity<UserResponse>
+        +updateStatus(id: Long, request: UpdateUserStatusRequest): ResponseEntity<UserResponse>
+    }
+
+    class AccessProfileController <<RestController>> {
+        +getAll(): ResponseEntity<List<AccessProfileResponse>>
+    }
+
+    class AuthApplicationService <<Application Service>> {
+        +signIn(command: SignInCommand): AuthResult
+        +signUp(command: SignUpCommand): AuthResult
+        +restoreSession(email: String): User
+    }
+
+    class UserApplicationService <<Application Service>> {
+        +getAllUsers(): List<User>
+        +getUserById(id: Long): User
+        +changeStatus(command: ChangeUserStatusCommand): User
+    }
+
+    class AccessProfileApplicationService <<Application Service>> {
+        +getProfiles(): List<AccessProfile>
+        +getDefaultOwnerProfile(): AccessProfile
+    }
+
+    class User <<Entity>> {
+        -id: Long
+        -fullName: String
+        -email: String
+        -passwordHash: String
+        -status: UserStatus
+        -accessProfiles: List<AccessProfile>
+        +activate(): void
+        +block(): void
+        +assignProfile(profile: AccessProfile): void
+    }
+
+    class AccessProfile <<Entity>> {
+        -id: Long
+        -name: String
+        -permissions: List<Permission>
+        +addPermission(permission: Permission): void
+    }
+
+    class Permission <<Entity>> {
+        -id: Long
+        -code: String
+        -description: String
+    }
+
+    enum UserStatus {
+        ACTIVE
+        BLOCKED
+    }
+
+    class UserRepository <<Repository Interface>> {
+        +findAll(): List<User>
+        +findById(id: Long): Optional<User>
+        +findByEmail(email: String): Optional<User>
+        +save(user: User): User
+    }
+
+    class AccessProfileRepository <<Repository Interface>> {
+        +findAll(): List<AccessProfile>
+        +findByName(name: String): Optional<AccessProfile>
+        +save(profile: AccessProfile): AccessProfile
+    }
+
+    class JpaUserRepository <<Spring Data JPA>> {
+        +findByEmail(email: String): Optional<UserJpaEntity>
+    }
+
+    class JpaAccessProfileRepository <<Spring Data JPA>> {
+        +findByName(name: String): Optional<AccessProfileJpaEntity>
+    }
+
+    class UserPersistenceAdapter <<Persistence Adapter>> {
+        +findAll(): List<User>
+        +findById(id: Long): Optional<User>
+        +findByEmail(email: String): Optional<User>
+        +save(user: User): User
+    }
+
+    class AccessProfilePersistenceAdapter <<Persistence Adapter>> {
+        +findAll(): List<AccessProfile>
+        +findByName(name: String): Optional<AccessProfile>
+        +save(profile: AccessProfile): AccessProfile
+    }
+
+    class UserJpaEntity <<JPA Entity>>
+    class AccessProfileJpaEntity <<JPA Entity>>
+    class PermissionJpaEntity <<JPA Entity>>
+
+    class UserMapper {
+        +toDomain(entity: UserJpaEntity): User
+        +toEntity(domain: User): UserJpaEntity
+        +toResponse(domain: User): UserResponse
+    }
+
+    class AccessProfileMapper {
+        +toDomain(entity: AccessProfileJpaEntity): AccessProfile
+        +toEntity(domain: AccessProfile): AccessProfileJpaEntity
+        +toResponse(domain: AccessProfile): AccessProfileResponse
+    }
+
+    class SignInCommand <<Command>> {
+        +email: String
+        +password: String
+    }
+
+    class SignUpCommand <<Command>> {
+        +fullName: String
+        +email: String
+        +password: String
+    }
+
+    class ChangeUserStatusCommand <<Command>> {
+        +userId: Long
+        +status: UserStatus
+    }
+
+    class SignInRequest <<Request DTO>> {
+        +email: String
+        +password: String
+    }
+
+    class SignUpRequest <<Request DTO>> {
+        +fullName: String
+        +email: String
+        +password: String
+    }
+
+    class UpdateUserStatusRequest <<Request DTO>> {
+        +status: UserStatus
+    }
+
+    class AuthResponse <<Response DTO>> {
+        +token: String
+        +user: UserResponse
+        +accessProfiles: List<AccessProfileResponse>
+    }
+
+    class UserResponse <<Response DTO>> {
+        +id: Long
+        +fullName: String
+        +email: String
+        +status: UserStatus
+    }
+
+    class AccessProfileResponse <<Response DTO>> {
+        +id: Long
+        +name: String
+        +permissions: List<String>
+    }
+
+    class AuthResult {
+        +token: String
+        +user: User
+        +accessProfiles: List<AccessProfile>
+    }
+}
+
+' =========================================================
+' DEVICE CONTROL
+' =========================================================
+
+package "device-control" {
+    class DeviceController <<RestController>> {
+        +getAll(): ResponseEntity<List<DeviceResponse>>
+        +create(request: CreateDeviceRequest): ResponseEntity<DeviceResponse>
+        +updateStatus(id: Long, request: UpdateDeviceStatusRequest): ResponseEntity<DeviceResponse>
+        +delete(id: Long): ResponseEntity<Void>
+    }
+
+    class RoutineController <<RestController>> {
+        +getAll(): ResponseEntity<List<RoutineResponse>>
+        +create(request: CreateRoutineRequest): ResponseEntity<RoutineResponse>
+        +updateEnabled(id: Long, request: UpdateRoutineEnabledRequest): ResponseEntity<RoutineResponse>
+        +delete(id: Long): ResponseEntity<Void>
+    }
+
+    class DeviceApplicationService <<Application Service>> {
+        +getDevicesByUser(userId: Long): List<Device>
+        +createDevice(command: CreateDeviceCommand): Device
+        +updateDeviceStatus(command: UpdateDeviceStatusCommand): Device
+        +deleteDevice(deviceId: Long): void
+    }
+
+    class RoutineApplicationService <<Application Service>> {
+        +getRoutinesByUser(userId: Long): List<Routine>
+        +createRoutine(command: CreateRoutineCommand): Routine
+        +updateRoutineEnabled(command: UpdateRoutineEnabledCommand): Routine
+        +deleteRoutine(routineId: Long): void
+    }
+
+    class Device <<Entity>> {
+        -id: Long
+        -userId: Long
+        -name: String
+        -room: String
+        -type: DeviceType
+        -status: DeviceStatus
+        -powerWatts: BigDecimal
+        +turnOn(): void
+        +turnOff(): void
+        +changeStatus(status: DeviceStatus): void
+    }
+
+    class Routine <<Entity>> {
+        -id: Long
+        -userId: Long
+        -deviceId: Long
+        -name: String
+        -action: RoutineAction
+        -scheduledTime: LocalTime
+        -enabled: boolean
+        +enable(): void
+        +disable(): void
+        +toggle(): void
+    }
+
+    enum DeviceType {
+        SMART_PLUG
+        SMART_SWITCH
+        LIGHT
+    }
+
+    enum DeviceStatus {
+        ON
+        OFF
+    }
+
+    enum RoutineAction {
+        TURN_ON
+        TURN_OFF
+    }
+
+    class RoutineConflictChecker <<Domain Service>> {
+        +hasConflict(candidate: Routine, routines: List<Routine>): boolean
+    }
+
+    class DeviceRepository <<Repository Interface>> {
+        +findByUserId(userId: Long): List<Device>
+        +findById(id: Long): Optional<Device>
+        +save(device: Device): Device
+        +deleteById(id: Long): void
+    }
+
+    class RoutineRepository <<Repository Interface>> {
+        +findByUserId(userId: Long): List<Routine>
+        +findByDeviceId(deviceId: Long): List<Routine>
+        +findById(id: Long): Optional<Routine>
+        +save(routine: Routine): Routine
+        +deleteById(id: Long): void
+    }
+
+    class JpaDeviceRepository <<Spring Data JPA>> {
+        +findByUserId(userId: Long): List<DeviceJpaEntity>
+    }
+
+    class JpaRoutineRepository <<Spring Data JPA>> {
+        +findByUserId(userId: Long): List<RoutineJpaEntity>
+        +findByDeviceId(deviceId: Long): List<RoutineJpaEntity>
+    }
+
+    class DevicePersistenceAdapter <<Persistence Adapter>>
+    class RoutinePersistenceAdapter <<Persistence Adapter>>
+
+    class DeviceJpaEntity <<JPA Entity>>
+    class RoutineJpaEntity <<JPA Entity>>
+
+    class DeviceMapper {
+        +toDomain(entity: DeviceJpaEntity): Device
+        +toEntity(domain: Device): DeviceJpaEntity
+        +toResponse(domain: Device): DeviceResponse
+    }
+
+    class RoutineMapper {
+        +toDomain(entity: RoutineJpaEntity): Routine
+        +toEntity(domain: Routine): RoutineJpaEntity
+        +toResponse(domain: Routine): RoutineResponse
+    }
+
+    class CreateDeviceCommand <<Command>> {
+        +userId: Long
+        +name: String
+        +room: String
+        +type: DeviceType
+        +powerWatts: BigDecimal
+    }
+
+    class UpdateDeviceStatusCommand <<Command>> {
+        +deviceId: Long
+        +status: DeviceStatus
+    }
+
+    class CreateRoutineCommand <<Command>> {
+        +userId: Long
+        +deviceId: Long
+        +name: String
+        +action: RoutineAction
+        +scheduledTime: LocalTime
+    }
+
+    class UpdateRoutineEnabledCommand <<Command>> {
+        +routineId: Long
+        +enabled: boolean
+    }
+
+    class CreateDeviceRequest <<Request DTO>>
+    class UpdateDeviceStatusRequest <<Request DTO>>
+    class CreateRoutineRequest <<Request DTO>>
+    class UpdateRoutineEnabledRequest <<Request DTO>>
+
+    class DeviceResponse <<Response DTO>> {
+        +id: Long
+        +name: String
+        +room: String
+        +type: DeviceType
+        +status: DeviceStatus
+        +powerWatts: BigDecimal
+    }
+
+    class RoutineResponse <<Response DTO>> {
+        +id: Long
+        +deviceId: Long
+        +name: String
+        +action: RoutineAction
+        +scheduledTime: LocalTime
+        +enabled: boolean
+    }
+}
+
+' =========================================================
+' ENERGY MONITORING
+' =========================================================
+
+package "energy-monitoring" {
+    class EnergyReadingController <<RestController>> {
+        +getAll(): ResponseEntity<List<EnergyReadingResponse>>
+        +getByDateRange(startDate: LocalDate, endDate: LocalDate): ResponseEntity<List<EnergyReadingResponse>>
+        +create(request: CreateEnergyReadingRequest): ResponseEntity<EnergyReadingResponse>
+        +exportCsv(): ResponseEntity<Resource>
+    }
+
+    class EnergyMonitoringApplicationService <<Application Service>> {
+        +getReadingsByUser(userId: Long): List<EnergyReading>
+        +filterReadings(command: FilterEnergyReadingsCommand): List<EnergyReading>
+        +createReading(command: CreateEnergyReadingCommand): EnergyReading
+        +generateRecommendation(userId: Long): String
+        +exportCsv(userId: Long): byte[]
+    }
+
+    class EnergyReading <<Entity>> {
+        -id: Long
+        -userId: Long
+        -deviceId: Long
+        -deviceName: String
+        -watts: BigDecimal
+        -recordedAt: LocalDateTime
+    }
+
+    class EnergyRecommendationService <<Domain Service>> {
+        +generate(readings: List<EnergyReading>): String
+    }
+
+    class EnergyReadingRepository <<Repository Interface>> {
+        +findByUserId(userId: Long): List<EnergyReading>
+        +findByUserIdAndRecordedAtBetween(userId: Long, start: LocalDateTime, end: LocalDateTime): List<EnergyReading>
+        +save(reading: EnergyReading): EnergyReading
+    }
+
+    class JpaEnergyReadingRepository <<Spring Data JPA>> {
+        +findByUserId(userId: Long): List<EnergyReadingJpaEntity>
+        +findByUserIdAndRecordedAtBetween(userId: Long, start: LocalDateTime, end: LocalDateTime): List<EnergyReadingJpaEntity>
+    }
+
+    class EnergyReadingPersistenceAdapter <<Persistence Adapter>>
+
+    class EnergyReadingJpaEntity <<JPA Entity>>
+
+    class EnergyReadingMapper {
+        +toDomain(entity: EnergyReadingJpaEntity): EnergyReading
+        +toEntity(domain: EnergyReading): EnergyReadingJpaEntity
+        +toResponse(domain: EnergyReading): EnergyReadingResponse
+    }
+
+    class CsvExportService <<Application Service>> {
+        +exportReadings(readings: List<EnergyReading>): byte[]
+    }
+
+    class CreateEnergyReadingCommand <<Command>> {
+        +userId: Long
+        +deviceId: Long
+        +deviceName: String
+        +watts: BigDecimal
+        +recordedAt: LocalDateTime
+    }
+
+    class FilterEnergyReadingsCommand <<Command>> {
+        +userId: Long
+        +startDate: LocalDate
+        +endDate: LocalDate
+    }
+
+    class CreateEnergyReadingRequest <<Request DTO>>
+    class EnergyReadingResponse <<Response DTO>> {
+        +id: Long
+        +deviceId: Long
+        +deviceName: String
+        +watts: BigDecimal
+        +recordedAt: LocalDateTime
+    }
+}
+
+' =========================================================
+' NOTIFICATIONS
+' =========================================================
+
+package "notifications" {
+    class AlertController <<RestController>> {
+        +getAll(): ResponseEntity<List<AlertResponse>>
+        +create(request: CreateAlertRequest): ResponseEntity<AlertResponse>
+        +markAsRead(id: Long): ResponseEntity<AlertResponse>
+    }
+
+    class NotificationApplicationService <<Application Service>> {
+        +getAlertsByUser(userId: Long): List<Alert>
+        +createAlert(command: CreateAlertCommand): Alert
+        +markAsRead(alertId: Long): Alert
+    }
+
+    class Alert <<Entity>> {
+        -id: Long
+        -userId: Long
+        -deviceId: Long
+        -title: String
+        -message: String
+        -level: AlertLevel
+        -read: boolean
+        -createdAt: LocalDateTime
+        +markAsRead(): void
+    }
+
+    enum AlertLevel {
+        INFO
+        WARNING
+        CRITICAL
+    }
+
+    class AlertRepository <<Repository Interface>> {
+        +findByUserId(userId: Long): List<Alert>
+        +findById(id: Long): Optional<Alert>
+        +save(alert: Alert): Alert
+    }
+
+    class JpaAlertRepository <<Spring Data JPA>> {
+        +findByUserId(userId: Long): List<AlertJpaEntity>
+    }
+
+    class AlertPersistenceAdapter <<Persistence Adapter>>
+
+    class AlertJpaEntity <<JPA Entity>>
+
+    class AlertMapper {
+        +toDomain(entity: AlertJpaEntity): Alert
+        +toEntity(domain: Alert): AlertJpaEntity
+        +toResponse(domain: Alert): AlertResponse
+    }
+
+    class CreateAlertCommand <<Command>> {
+        +userId: Long
+        +deviceId: Long
+        +title: String
+        +message: String
+        +level: AlertLevel
+    }
+
+    class CreateAlertRequest <<Request DTO>>
+    class AlertResponse <<Response DTO>> {
+        +id: Long
+        +title: String
+        +message: String
+        +level: AlertLevel
+        +read: boolean
+        +createdAt: LocalDateTime
+    }
+}
+
+' =========================================================
+' BILLING
+' =========================================================
+
+package "billing" {
+    class PlanController <<RestController>> {
+        +getAll(): ResponseEntity<List<PlanResponse>>
+    }
+
+    class SubscriptionController <<RestController>> {
+        +getActive(): ResponseEntity<SubscriptionResponse>
+        +subscribe(request: SubscribeRequest): ResponseEntity<SubscriptionResponse>
+        +cancel(id: Long): ResponseEntity<SubscriptionResponse>
+    }
+
+    class BillingApplicationService <<Application Service>> {
+        +getPlans(): List<Plan>
+        +getActiveSubscription(userId: Long): Subscription
+        +subscribe(command: SubscribeCommand): Subscription
+        +cancelSubscription(subscriptionId: Long): Subscription
+    }
+
+    class PaymentGatewayService <<Application Service>> {
+        +processSubscriptionPayment(command: SubscribeCommand): PaymentResult
+    }
+
+    class Plan <<Entity>> {
+        -id: Long
+        -code: PlanCode
+        -name: String
+        -monthlyPrice: BigDecimal
+        -features: List<PlanFeature>
+    }
+
+    class PlanFeature <<Entity>> {
+        -id: Long
+        -planId: Long
+        -feature: String
+    }
+
+    class Subscription <<Entity>> {
+        -id: Long
+        -userId: Long
+        -planId: Long
+        -planCode: PlanCode
+        -status: SubscriptionStatus
+        -startedAt: LocalDate
+        -endsAt: LocalDate
+        +activate(): void
+        +cancel(): void
+    }
+
+    enum PlanCode {
+        STARTER
+        PROFESSIONAL
+        ENTERPRISE
+    }
+
+    enum SubscriptionStatus {
+        ACTIVE
+        CANCELED
+    }
+
+    class PlanRepository <<Repository Interface>> {
+        +findAll(): List<Plan>
+        +findByCode(code: PlanCode): Optional<Plan>
+    }
+
+    class SubscriptionRepository <<Repository Interface>> {
+        +findActiveByUserId(userId: Long): Optional<Subscription>
+        +save(subscription: Subscription): Subscription
+    }
+
+    class JpaPlanRepository <<Spring Data JPA>> {
+        +findByCode(code: PlanCode): Optional<PlanJpaEntity>
+    }
+
+    class JpaSubscriptionRepository <<Spring Data JPA>> {
+        +findByUserIdAndStatus(userId: Long, status: SubscriptionStatus): Optional<SubscriptionJpaEntity>
+    }
+
+    class PlanPersistenceAdapter <<Persistence Adapter>>
+    class SubscriptionPersistenceAdapter <<Persistence Adapter>>
+
+    class PlanJpaEntity <<JPA Entity>>
+    class PlanFeatureJpaEntity <<JPA Entity>>
+    class SubscriptionJpaEntity <<JPA Entity>>
+
+    class PlanMapper {
+        +toDomain(entity: PlanJpaEntity): Plan
+        +toEntity(domain: Plan): PlanJpaEntity
+        +toResponse(domain: Plan): PlanResponse
+    }
+
+    class SubscriptionMapper {
+        +toDomain(entity: SubscriptionJpaEntity): Subscription
+        +toEntity(domain: Subscription): SubscriptionJpaEntity
+        +toResponse(domain: Subscription): SubscriptionResponse
+    }
+
+    class SubscribeCommand <<Command>> {
+        +userId: Long
+        +planCode: PlanCode
+    }
+
+    class SubscribeRequest <<Request DTO>> {
+        +planCode: PlanCode
+    }
+
+    class PlanResponse <<Response DTO>> {
+        +id: Long
+        +code: PlanCode
+        +name: String
+        +monthlyPrice: BigDecimal
+        +features: List<String>
+    }
+
+    class SubscriptionResponse <<Response DTO>> {
+        +id: Long
+        +planCode: PlanCode
+        +status: SubscriptionStatus
+        +startedAt: LocalDate
+        +endsAt: LocalDate
+    }
+
+    class PaymentResult {
+        +successful: boolean
+        +transactionId: String
+        +message: String
+    }
+}
+
+' =========================================================
+' SHARED INHERITANCE
+' =========================================================
+
+User --|> BaseEntity
+AccessProfile --|> BaseEntity
+Permission --|> BaseEntity
+Device --|> BaseEntity
+Routine --|> BaseEntity
+EnergyReading --|> BaseEntity
+Alert --|> BaseEntity
+Plan --|> BaseEntity
+PlanFeature --|> BaseEntity
+Subscription --|> BaseEntity
+
+' =========================================================
+' CONTROLLER TO APPLICATION CONNECTIONS
+' =========================================================
+
+AuthController --> AuthApplicationService
+AuthController --> SignInRequest
+AuthController --> SignUpRequest
+AuthController --> AuthResponse
+
+UserController --> UserApplicationService
+UserController --> UserResponse
+
+AccessProfileController --> AccessProfileApplicationService
+AccessProfileController --> AccessProfileResponse
+
+DeviceController --> DeviceApplicationService
+DeviceController --> CreateDeviceRequest
+DeviceController --> UpdateDeviceStatusRequest
+DeviceController --> DeviceResponse
+
+RoutineController --> RoutineApplicationService
+RoutineController --> CreateRoutineRequest
+RoutineController --> UpdateRoutineEnabledRequest
+RoutineController --> RoutineResponse
+
+EnergyReadingController --> EnergyMonitoringApplicationService
+EnergyReadingController --> CreateEnergyReadingRequest
+EnergyReadingController --> EnergyReadingResponse
+
+AlertController --> NotificationApplicationService
+AlertController --> CreateAlertRequest
+AlertController --> AlertResponse
+
+PlanController --> BillingApplicationService
+PlanController --> PlanResponse
+
+SubscriptionController --> BillingApplicationService
+SubscriptionController --> SubscribeRequest
+SubscriptionController --> SubscriptionResponse
+
+' =========================================================
+' APPLICATION TO DOMAIN / REPOSITORY CONNECTIONS
+' =========================================================
+
+AuthApplicationService --> UserRepository
+AuthApplicationService --> AccessProfileRepository
+AuthApplicationService --> JwtService
+AuthApplicationService --> PasswordEncoderService
+AuthApplicationService --> SignInCommand
+AuthApplicationService --> SignUpCommand
+AuthApplicationService --> AuthResult
+AuthApplicationService --> User
+AuthApplicationService --> AccessProfile
+
+UserApplicationService --> UserRepository
+AccessProfileApplicationService --> AccessProfileRepository
+
+DeviceApplicationService --> DeviceRepository
+DeviceApplicationService --> CreateDeviceCommand
+DeviceApplicationService --> UpdateDeviceStatusCommand
+DeviceApplicationService --> Device
+
+RoutineApplicationService --> RoutineRepository
+RoutineApplicationService --> DeviceRepository
+RoutineApplicationService --> RoutineConflictChecker
+RoutineApplicationService --> CreateRoutineCommand
+RoutineApplicationService --> UpdateRoutineEnabledCommand
+RoutineApplicationService --> Routine
+
+EnergyMonitoringApplicationService --> EnergyReadingRepository
+EnergyMonitoringApplicationService --> EnergyRecommendationService
+EnergyMonitoringApplicationService --> CsvExportService
+EnergyMonitoringApplicationService --> CreateEnergyReadingCommand
+EnergyMonitoringApplicationService --> FilterEnergyReadingsCommand
+EnergyMonitoringApplicationService --> EnergyReading
+
+NotificationApplicationService --> AlertRepository
+NotificationApplicationService --> CreateAlertCommand
+NotificationApplicationService --> Alert
+
+BillingApplicationService --> PlanRepository
+BillingApplicationService --> SubscriptionRepository
+BillingApplicationService --> PaymentGatewayService
+BillingApplicationService --> SubscribeCommand
+BillingApplicationService --> Plan
+BillingApplicationService --> Subscription
+
+' =========================================================
+' DOMAIN RELATIONSHIPS
+' =========================================================
+
+User "1" o-- "0..*" AccessProfile
+AccessProfile "1" o-- "0..*" Permission
+
+Device --> DeviceType
+Device --> DeviceStatus
+Routine --> RoutineAction
+Routine --> Device : references deviceId
+EnergyReading --> Device : references deviceId
+Alert --> AlertLevel
+Alert --> Device : references deviceId
+
+Plan --> PlanCode
+Plan "1" o-- "0..*" PlanFeature
+Subscription --> PlanCode
+Subscription --> SubscriptionStatus
+Subscription --> Plan : references planId
+Subscription --> User : references userId
+
+' =========================================================
+' REPOSITORY / INFRASTRUCTURE CONNECTIONS
+' =========================================================
+
+UserRepository <|.. UserPersistenceAdapter
+AccessProfileRepository <|.. AccessProfilePersistenceAdapter
+DeviceRepository <|.. DevicePersistenceAdapter
+RoutineRepository <|.. RoutinePersistenceAdapter
+EnergyReadingRepository <|.. EnergyReadingPersistenceAdapter
+AlertRepository <|.. AlertPersistenceAdapter
+PlanRepository <|.. PlanPersistenceAdapter
+SubscriptionRepository <|.. SubscriptionPersistenceAdapter
+
+UserPersistenceAdapter --> JpaUserRepository
+UserPersistenceAdapter --> UserMapper
+UserPersistenceAdapter --> UserJpaEntity
+
+AccessProfilePersistenceAdapter --> JpaAccessProfileRepository
+AccessProfilePersistenceAdapter --> AccessProfileMapper
+AccessProfilePersistenceAdapter --> AccessProfileJpaEntity
+
+DevicePersistenceAdapter --> JpaDeviceRepository
+DevicePersistenceAdapter --> DeviceMapper
+DevicePersistenceAdapter --> DeviceJpaEntity
+
+RoutinePersistenceAdapter --> JpaRoutineRepository
+RoutinePersistenceAdapter --> RoutineMapper
+RoutinePersistenceAdapter --> RoutineJpaEntity
+
+EnergyReadingPersistenceAdapter --> JpaEnergyReadingRepository
+EnergyReadingPersistenceAdapter --> EnergyReadingMapper
+EnergyReadingPersistenceAdapter --> EnergyReadingJpaEntity
+
+AlertPersistenceAdapter --> JpaAlertRepository
+AlertPersistenceAdapter --> AlertMapper
+AlertPersistenceAdapter --> AlertJpaEntity
+
+PlanPersistenceAdapter --> JpaPlanRepository
+PlanPersistenceAdapter --> PlanMapper
+PlanPersistenceAdapter --> PlanJpaEntity
+
+SubscriptionPersistenceAdapter --> JpaSubscriptionRepository
+SubscriptionPersistenceAdapter --> SubscriptionMapper
+SubscriptionPersistenceAdapter --> SubscriptionJpaEntity
+
+' =========================================================
+' MAPPERS CONNECTIONS
+' =========================================================
+
+UserMapper --> User
+UserMapper --> UserJpaEntity
+UserMapper --> UserResponse
+
+AccessProfileMapper --> AccessProfile
+AccessProfileMapper --> AccessProfileJpaEntity
+AccessProfileMapper --> AccessProfileResponse
+
+DeviceMapper --> Device
+DeviceMapper --> DeviceJpaEntity
+DeviceMapper --> DeviceResponse
+
+RoutineMapper --> Routine
+RoutineMapper --> RoutineJpaEntity
+RoutineMapper --> RoutineResponse
+
+EnergyReadingMapper --> EnergyReading
+EnergyReadingMapper --> EnergyReadingJpaEntity
+EnergyReadingMapper --> EnergyReadingResponse
+
+AlertMapper --> Alert
+AlertMapper --> AlertJpaEntity
+AlertMapper --> AlertResponse
+
+PlanMapper --> Plan
+PlanMapper --> PlanJpaEntity
+PlanMapper --> PlanResponse
+
+SubscriptionMapper --> Subscription
+SubscriptionMapper --> SubscriptionJpaEntity
+SubscriptionMapper --> SubscriptionResponse
+
+' =========================================================
+' JPA ENTITY RELATIONSHIPS
+' =========================================================
+
+UserJpaEntity "1" -- "0..*" DeviceJpaEntity
+UserJpaEntity "1" -- "0..*" RoutineJpaEntity
+UserJpaEntity "1" -- "0..*" AlertJpaEntity
+UserJpaEntity "1" -- "0..*" SubscriptionJpaEntity
+
+DeviceJpaEntity "1" -- "0..*" RoutineJpaEntity
+DeviceJpaEntity "1" -- "0..*" EnergyReadingJpaEntity
+DeviceJpaEntity "1" -- "0..*" AlertJpaEntity
+
+PlanJpaEntity "1" -- "0..*" PlanFeatureJpaEntity
+PlanJpaEntity "1" -- "0..*" SubscriptionJpaEntity
+
+@enduml

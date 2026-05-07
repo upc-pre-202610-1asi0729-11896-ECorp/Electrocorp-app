@@ -1,0 +1,153 @@
+@startuml
+title ElectroCorp - Database Diagram
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+    ArrowColor #333333
+}
+
+entity "users" as users {
+    * id : BIGINT <<PK>>
+    --
+    full_name : VARCHAR(120)
+    email : VARCHAR(120) <<UNIQUE>>
+    password_hash : VARCHAR(255)
+    status : VARCHAR(20)
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "access_profiles" as access_profiles {
+    * id : BIGINT <<PK>>
+    --
+    name : VARCHAR(50) <<UNIQUE>>
+    description : VARCHAR(255)
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "permissions" as permissions {
+    * id : BIGINT <<PK>>
+    --
+    code : VARCHAR(80) <<UNIQUE>>
+    description : VARCHAR(255)
+}
+
+entity "user_access_profiles" as user_access_profiles {
+    * id : BIGINT <<PK>>
+    --
+    user_id : BIGINT <<FK>>
+    access_profile_id : BIGINT <<FK>>
+    assigned_at : DATETIME
+}
+
+entity "access_profile_permissions" as access_profile_permissions {
+    * id : BIGINT <<PK>>
+    --
+    access_profile_id : BIGINT <<FK>>
+    permission_id : BIGINT <<FK>>
+}
+
+entity "devices" as devices {
+    * id : BIGINT <<PK>>
+    --
+    user_id : BIGINT <<FK>>
+    name : VARCHAR(120)
+    room : VARCHAR(80)
+    type : VARCHAR(40)
+    status : VARCHAR(20)
+    power_watts : DECIMAL(10,2)
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "routines" as routines {
+    * id : BIGINT <<PK>>
+    --
+    user_id : BIGINT <<FK>>
+    device_id : BIGINT <<FK>>
+    name : VARCHAR(120)
+    action : VARCHAR(40)
+    scheduled_time : TIME
+    enabled : BOOLEAN
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "energy_readings" as energy_readings {
+    * id : BIGINT <<PK>>
+    --
+    device_id : BIGINT <<FK>>
+    watts : DECIMAL(10,2)
+    recorded_at : DATETIME
+    created_at : DATETIME
+}
+
+entity "alerts" as alerts {
+    * id : BIGINT <<PK>>
+    --
+    user_id : BIGINT <<FK>>
+    device_id : BIGINT <<FK>>
+    title : VARCHAR(150)
+    message : VARCHAR(500)
+    level : VARCHAR(30)
+    read : BOOLEAN
+    created_at : DATETIME
+}
+
+entity "plans" as plans {
+    * id : BIGINT <<PK>>
+    --
+    code : VARCHAR(50) <<UNIQUE>>
+    name : VARCHAR(100)
+    monthly_price : DECIMAL(10,2)
+    description : VARCHAR(255)
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+entity "plan_features" as plan_features {
+    * id : BIGINT <<PK>>
+    --
+    plan_id : BIGINT <<FK>>
+    feature : VARCHAR(255)
+}
+
+entity "subscriptions" as subscriptions {
+    * id : BIGINT <<PK>>
+    --
+    user_id : BIGINT <<FK>>
+    plan_id : BIGINT <<FK>>
+    status : VARCHAR(30)
+    started_at : DATE
+    ends_at : DATE
+    created_at : DATETIME
+    updated_at : DATETIME
+}
+
+' Relationships
+
+users ||--o{ user_access_profiles : has
+access_profiles ||--o{ user_access_profiles : assigned_to
+
+access_profiles ||--o{ access_profile_permissions : contains
+permissions ||--o{ access_profile_permissions : included_in
+
+users ||--o{ devices : owns
+users ||--o{ routines : creates
+devices ||--o{ routines : scheduled_by
+
+devices ||--o{ energy_readings : generates
+
+users ||--o{ alerts : receives
+devices ||--o{ alerts : triggers
+
+plans ||--o{ plan_features : includes
+users ||--o{ subscriptions : subscribes
+plans ||--o{ subscriptions : selected_in
+
+@enduml
