@@ -1,4 +1,5 @@
 import 'zone.js';
+import './assets/load-fonts.js';
 
 import { bootstrapApplication } from '@angular/platform-browser';
 
