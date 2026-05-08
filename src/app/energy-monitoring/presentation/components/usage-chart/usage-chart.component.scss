@@ -1,0 +1,40 @@
+.chart {
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 12px 4px;
+}
+
+.bar-item {
+  min-width: 80px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.bar-track {
+  width: 44px;
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, var(--accent-color), #74ffd1);
+}
+
+strong {
+  font-size: 0.9rem;
+}
+
+span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}

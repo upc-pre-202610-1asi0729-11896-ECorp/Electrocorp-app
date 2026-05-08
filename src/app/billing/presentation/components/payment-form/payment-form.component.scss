@@ -1,0 +1,140 @@
+.payment-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.payment-modal {
+  width: min(620px, 100%);
+  padding: 28px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top, rgba(66, 194, 255, 0.15), transparent 40%),
+    var(--bg-middle);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 900;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+}
+
+p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.close-btn {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 9px 12px;
+  color: var(--text-primary);
+  background: var(--button-bg);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.amount-card {
+  margin: 22px 0;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.amount-card span {
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+.amount-card strong {
+  font-size: 1.6rem;
+}
+
+.payment-form {
+  display: grid;
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+}
+
+input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.18);
+  font: inherit;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.primary-btn,
+.secondary-btn {
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primary-btn {
+  border: 0;
+  color: var(--accent-contrast);
+  background: var(--accent-color);
+}
+
+.secondary-btn {
+  color: var(--text-primary);
+  background: var(--button-bg);
+  border: 1px solid var(--border-color);
+}
+
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

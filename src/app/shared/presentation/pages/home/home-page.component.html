@@ -1,0 +1,109 @@
+<section class="page">
+  <article class="hero-card">
+    <div>
+      <p class="eyebrow">{{ 'home.eyebrow' | translate }}</p>
+      <h1>{{ 'home.title' | translate }}</h1>
+      <p class="subtitle">{{ 'home.content' | translate }}</p>
+    </div>
+
+    <div class="quick-actions">
+      <a routerLink="/device-control/devices" class="primary-link">
+        {{ 'home.manageDevices' | translate }}
+      </a>
+
+      <a routerLink="/energy-monitoring/dashboard" class="secondary-link">
+        {{ 'home.viewEnergy' | translate }}
+      </a>
+    </div>
+  </article>
+
+  <section class="summary-grid">
+    <article class="summary-card">
+      <span>{{ 'home.cardDevices' | translate }}</span>
+      <strong>{{ deviceControlFacade.totalDevices() }}</strong>
+      <small>
+        {{ deviceControlFacade.activeDevices() }}
+        {{ 'home.activeDevices' | translate }}
+      </small>
+    </article>
+
+    <article class="summary-card">
+      <span>{{ 'home.cardRoutines' | translate }}</span>
+      <strong>{{ deviceControlFacade.totalRoutines() }}</strong>
+      <small>
+        {{ deviceControlFacade.enabledRoutines() }}
+        {{ 'home.enabledRoutines' | translate }}
+      </small>
+    </article>
+
+    <article class="summary-card">
+      <span>{{ 'home.cardConsumption' | translate }}</span>
+      <strong>{{ energyMonitoringFacade.totalWatts() }}W</strong>
+      <small>
+        {{ 'home.averageConsumption' | translate }}:
+        {{ energyMonitoringFacade.averageWatts() }}W
+      </small>
+    </article>
+
+    <article class="summary-card">
+      <span>{{ 'home.cardAlerts' | translate }}</span>
+      <strong>{{ notificationsFacade.unreadCount() }}</strong>
+      <small>{{ 'home.unreadAlerts' | translate }}</small>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="dashboard-card">
+      <p class="eyebrow">{{ 'home.energyOverview' | translate }}</p>
+      <h2>{{ energyMonitoringFacade.recommendationKey() | translate }}</h2>
+
+      <div class="mini-metrics">
+        <span>
+          {{ 'energy.totalWatts' | translate }}:
+          <strong>{{ energyMonitoringFacade.totalWatts() }}W</strong>
+        </span>
+
+        <span>
+          {{ 'energy.highestReading' | translate }}:
+          <strong>{{ energyMonitoringFacade.highestReading() }}W</strong>
+        </span>
+      </div>
+
+      <a routerLink="/energy-monitoring/dashboard" class="card-link">
+        {{ 'home.openEnergyDashboard' | translate }}
+      </a>
+    </article>
+
+    <article class="dashboard-card">
+      <p class="eyebrow">{{ 'home.subscriptionOverview' | translate }}</p>
+
+      @if (billingFacade.activePlan()) {
+        <h2>{{ billingFacade.activePlan()?.name }}</h2>
+        <p>
+          {{ 'billing.activeSubscription' | translate }}
+        </p>
+      } @else {
+        <h2>{{ 'billing.noPlan' | translate }}</h2>
+        <p>{{ 'home.noPlanDescription' | translate }}</p>
+      }
+
+      <a routerLink="/billing/plans" class="card-link">
+        {{ 'home.openPlans' | translate }}
+      </a>
+    </article>
+
+    <article class="dashboard-card">
+      <p class="eyebrow">{{ 'home.alertOverview' | translate }}</p>
+      <h2>
+        {{ notificationsFacade.unreadCount() }}
+        {{ 'home.unreadAlerts' | translate }}
+      </h2>
+
+      <p>{{ 'home.alertDescription' | translate }}</p>
+
+      <a routerLink="/notifications/alerts" class="card-link">
+        {{ 'home.openAlerts' | translate }}
+      </a>
+    </article>
+  </section>
+</section>

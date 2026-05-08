@@ -1,0 +1,85 @@
+.device-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.device-type {
+  margin: 0 0 6px;
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+h3 {
+  margin: 0 0 6px;
+}
+
+span {
+  color: var(--text-muted);
+}
+
+.status {
+  height: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 154, 168, 0.16);
+  color: var(--danger-color);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.status.on {
+  background: rgba(95, 255, 190, 0.14);
+  color: #66ffc2;
+}
+
+.device-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-body p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.device-body strong {
+  font-size: 1.6rem;
+}
+
+.device-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.toggle-btn {
+  background: var(--accent-color);
+  color: var(--accent-contrast);
+}
+
+.remove-btn {
+  background: rgba(255, 154, 168, 0.14);
+  color: var(--danger-color);
+}

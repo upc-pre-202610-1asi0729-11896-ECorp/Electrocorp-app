@@ -1,0 +1,16 @@
+@if (devices.length > 0) {
+  <section class="device-grid">
+    @for (device of devices; track device.id) {
+      <app-device-card
+        [device]="device"
+        (toggle)="toggle.emit($event)"
+        (remove)="remove.emit($event)"
+      />
+    }
+  </section>
+} @else {
+  <article class="empty-state">
+    <h3>{{ 'devices.emptyTitle' | translate }}</h3>
+    <p>{{ 'devices.emptyContent' | translate }}</p>
+  </article>
+}

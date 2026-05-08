@@ -1,0 +1,44 @@
+@if (routines.length > 0) {
+  <section class="routine-list">
+    @for (routine of routines; track routine.id) {
+      <article class="routine-card">
+        <div>
+          <p class="routine-action">{{ routine.action }}</p>
+          <h3>{{ routine.name }}</h3>
+          <span>
+            {{ getDeviceName(routine.deviceId) }} · {{ routine.scheduledTime }}
+          </span>
+        </div>
+
+        <div class="routine-side">
+          <span class="status" [class.active]="routine.enabled">
+            @if (routine.enabled) {
+              {{ 'routines.active' | translate }}
+            } @else {
+              {{ 'routines.inactive' | translate }}
+            }
+          </span>
+
+          <div class="actions">
+            <button type="button" class="toggle-btn" (click)="toggle.emit(routine.id)">
+              @if (routine.enabled) {
+                {{ 'routines.disable' | translate }}
+              } @else {
+                {{ 'routines.enable' | translate }}
+              }
+            </button>
+
+            <button type="button" class="remove-btn" (click)="remove.emit(routine.id)">
+              {{ 'common.delete' | translate }}
+            </button>
+          </div>
+        </div>
+      </article>
+    }
+  </section>
+} @else {
+  <article class="empty-state">
+    <h3>{{ 'routines.emptyTitle' | translate }}</h3>
+    <p>{{ 'routines.emptyContent' | translate }}</p>
+  </article>
+}

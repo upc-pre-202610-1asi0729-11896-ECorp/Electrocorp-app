@@ -1,0 +1,99 @@
+.alert-list {
+  display: grid;
+  gap: 14px;
+}
+
+.alert-card,
+.empty-state {
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
+.alert-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.alert-card.unread {
+  border-color: var(--accent-color);
+}
+
+.alert-main {
+  display: grid;
+  gap: 8px;
+}
+
+.alert-heading {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.level,
+.unread-badge {
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.level {
+  color: #66ffc2;
+  background: rgba(95, 255, 190, 0.14);
+}
+
+.level.warning {
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.14);
+}
+
+.level.critical {
+  color: var(--danger-color);
+  background: rgba(255, 154, 168, 0.14);
+}
+
+.unread-badge {
+  color: var(--accent-color);
+  background: rgba(66, 194, 255, 0.14);
+}
+
+h3,
+p {
+  margin: 0;
+}
+
+p,
+.date,
+.empty-state p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.date {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.read-btn {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  color: var(--accent-contrast);
+  background: var(--accent-color);
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .alert-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
