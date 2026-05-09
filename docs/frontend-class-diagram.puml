@@ -1,0 +1,718 @@
+@startuml
+title ElectroCorp - Frontend Class Diagram Updated
+
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+package "Shared" {
+  abstract class BaseEntity<TId> {
+    -_id: TId
+    +id: TId
+  }
+
+  interface BaseResource
+
+  interface BaseResponse<TId> {
+    +id: TId
+  }
+
+  abstract class BaseAssembler<TEntity, TResource, TResponse> {
+    +toEntity(response: TResponse): TEntity
+    +toResource(entity: TEntity): TResource
+  }
+
+  abstract class BaseApiService<TEntity, TResource, TResponse> {
+    -apiBaseUrl: string
+    -endpointPath: string
+    -assembler: BaseAssembler
+    +findAll(): Observable<TResponse[]>
+    +findById(id: number): Observable<TResponse>
+    +create(resource: TResource): Observable<TResponse>
+    +update(id: number, resource: Partial<TResource>): Observable<TResponse>
+    +delete(id: number): Observable<void>
+  }
+
+  class LocalStorageService {
+    +getItem(key: string): string
+    +setItem(key: string, value: string): void
+    +removeItem(key: string): void
+    +clear(): void
+  }
+
+  class AuthSessionService {
+    -authenticatedSignal
+    -userIdSignal
+    -userEmailSignal
+    -userNameSignal
+    +isAuthenticated()
+    +userId()
+    +userEmail()
+    +userName()
+    +startSession(payload): void
+    +closeSession(): void
+    +restoreSession(): void
+  }
+
+  class ThemeService {
+    +applyTheme(isDarkMode: boolean): void
+  }
+
+  class UiPreferencesService {
+    -languageSignal
+    -darkModeSignal
+    +language()
+    +darkMode()
+    +setLanguage(language): void
+    +toggleTheme(): void
+    +restorePreferences(): void
+  }
+
+  class TranslationFacadeService {
+    -loadedLanguages
+    +initialize(): Promise<void>
+    +changeLanguage(language): Promise<void>
+  }
+
+  class ActiveSubscriptionGuard {
+    +canActivate(): boolean
+  }
+
+  class AppLayoutComponent {
+    +switchLanguage(language): Promise<void>
+    +toggleTheme(): void
+    +signOut(): Promise<void>
+  }
+
+  class HomePageComponent {
+    +ngOnInit(): Promise<void>
+  }
+
+  class AboutPageComponent
+  class NotFoundPageComponent
+  class FooterComponent
+}
+
+package "IAM" {
+  class User {
+    -_fullName: string
+    -_email: string
+    -_status: UserStatus
+    +fullName: string
+    +email: string
+    +status: UserStatus
+    +isActive: boolean
+  }
+
+  class AccessProfile {
+    -_name: string
+    -_permissions: string[]
+    +name: string
+    +permissions: string[]
+    +hasPermission(permission: string): boolean
+  }
+
+  class SignInDto {
+    +email: string
+    +password: string
+  }
+
+  class SignUpDto {
+    +fullName: string
+    +email: string
+    +password: string
+  }
+
+  interface SignInResource {
+    +email: string
+    +password: string
+  }
+
+  interface SignUpResource {
+    +fullName: string
+    +email: string
+    +password: string
+  }
+
+  interface UserResponse {
+    +id: number
+    +fullName: string
+    +email: string
+    +password: string
+    +status: UserStatus
+  }
+
+  interface AccessProfileResponse {
+    +id: number
+    +name: string
+    +permissions: string[]
+  }
+
+  class UserAssembler
+  class AccessProfileAssembler
+
+  class IamApiService {
+    +signIn(resource: SignInResource): Promise<AuthPayload>
+    +signUp(resource: SignUpResource): Promise<AuthPayload>
+    +restoreSession(email: string): Promise<AuthPayload>
+  }
+
+  class IamFacade {
+    -currentUserSignal
+    -accessProfilesSignal
+    -loadingSignal
+    -errorSignal
+    +currentUser()
+    +accessProfiles()
+    +loading()
+    +error()
+    +isAuthenticated()
+    +signIn(payload: SignInDto): Promise<void>
+    +signUp(payload: SignUpDto): Promise<void>
+    +restoreSession(): Promise<void>
+    +signOut(): void
+  }
+
+  class LoginPageComponent {
+    +email: string
+    +password: string
+    +handleSubmit(): Promise<void>
+  }
+
+  class RegisterPageComponent {
+    +fullName: string
+    +email: string
+    +password: string
+    +handleSubmit(): Promise<void>
+  }
+}
+
+package "Billing" {
+  class Plan {
+    -_code: PlanCode
+    -_name: string
+    -_monthlyPrice: number
+    -_description: string
+    -_features: string[]
+    +code: PlanCode
+    +name: string
+    +monthlyPrice: number
+    +description: string
+    +features: string[]
+  }
+
+  class Subscription {
+    -_userId: number
+    -_planCode: PlanCode
+    -_status: SubscriptionStatus
+    -_startedAt: string
+    -_endsAt: string
+    +userId: number
+    +planCode: PlanCode
+    +status: SubscriptionStatus
+    +startedAt: string
+    +endsAt: string
+    +isActive: boolean
+  }
+
+  class Payment {
+    -_userId: number
+    -_planCode: PlanCode
+    -_amount: number
+    -_method: PaymentMethod
+    -_status: PaymentStatus
+    -_createdAt: string
+    -_cardLastFourDigits: string
+    -_holderName: string
+    +isApproved: boolean
+  }
+
+  class SubscribeDto {
+    +planCode: PlanCode
+  }
+
+  class CancelSubscriptionDto {
+    +subscriptionId: number
+  }
+
+  class ProcessPaymentDto {
+    +planCode: PlanCode
+    +amount: number
+    +holderName: string
+    +cardNumber: string
+    +expirationDate: string
+    +cvv: string
+  }
+
+  interface PlanResource
+  interface SubscriptionResource
+  interface PaymentResource
+
+  interface PlanResponse
+  interface SubscriptionResponse
+  interface PaymentResponse
+
+  class PlanAssembler
+  class SubscriptionAssembler
+  class PaymentAssembler
+
+  class PlansApiService
+  class SubscriptionsApiService {
+    +findActiveByUserId(userId: number): Observable<SubscriptionResponse[]>
+    +cancelSubscription(subscriptionId: number): Observable<SubscriptionResponse>
+  }
+
+  class PaymentsApiService {
+    +findByUserId(userId: number): Observable<PaymentResponse[]>
+  }
+
+  class SubscriptionPolicyService {
+    +canSubscribeToPlan(currentSubscription: Subscription, targetPlanCode: PlanCode): boolean
+    +canCancelSubscription(subscription: Subscription): boolean
+  }
+
+  class PlanPermissionService {
+    +getPermissions(planCode: PlanCode)
+    +canCreateDevice(planCode: PlanCode, currentDevices: number): boolean
+    +canCreateRoutine(planCode: PlanCode, currentRoutines: number): boolean
+    +canCreateManualAlert(planCode: PlanCode, currentAlerts: number): boolean
+    +canExportCsv(planCode: PlanCode): boolean
+    +canAccessEnergyHistory(planCode: PlanCode): boolean
+  }
+
+  class BillingFacade {
+    -plansSignal
+    -activeSubscriptionSignal
+    -lastPaymentSignal
+    -loadingSignal
+    -errorSignal
+    +plans()
+    +activeSubscription()
+    +activePlanCode()
+    +activePlan()
+    +lastPayment()
+    +hasActiveSubscription()
+    +loadBilling(): Promise<void>
+    +loadPlans(): Promise<void>
+    +loadActiveSubscription(): Promise<void>
+    +loadLastPayment(): Promise<void>
+    +processFakePayment(payload: ProcessPaymentDto): Promise<boolean>
+    +subscribe(payload: SubscribeDto): Promise<void>
+    +cancelSubscription(payload: CancelSubscriptionDto): Promise<void>
+    +cancelCurrentSubscription(): Promise<void>
+    +clearError(): void
+  }
+
+  class PlansPageComponent {
+    +selectedPlan
+    +ngOnInit(): Promise<void>
+    +handleSubscribe(plan: Plan): void
+    +handleConfirmPayment(payload: ProcessPaymentDto): Promise<void>
+    +handleCancelSubscription(): Promise<void>
+  }
+
+  class PlanCardComponent {
+    +plan: Plan
+    +loading: boolean
+    +isCurrentPlan: boolean
+    +onSubscribe(): void
+  }
+
+  class PaymentFormComponent {
+    +plan: Plan
+    +holderName: string
+    +cardNumber: string
+    +expirationDate: string
+    +cvv: string
+    +onCardNumberChange(value: string): void
+    +onExpirationDateChange(value: string): void
+    +onCvvChange(value: string): void
+    +onConfirm(): void
+    +onCancel(): void
+  }
+}
+
+package "Device Control" {
+  class Device {
+    -_name: string
+    -_room: string
+    -_type: DeviceType
+    -_status: DeviceStatus
+    -_powerWatts: number
+    +toggleStatus(): void
+  }
+
+  class Routine {
+    -_name: string
+    -_deviceId: number
+    -_action: RoutineAction
+    -_scheduledTime: string
+    -_enabled: boolean
+    +toggleEnabled(): void
+  }
+
+  class CreateDeviceDto {
+    +name: string
+    +room: string
+    +type: DeviceType
+    +powerWatts: number
+  }
+
+  class CreateRoutineDto {
+    +name: string
+    +deviceId: number
+    +action: RoutineAction
+    +scheduledTime: string
+  }
+
+  class UpdateDeviceStatusDto {
+    +deviceId: number
+    +status: DeviceStatus
+  }
+
+  interface DeviceResource
+  interface RoutineResource
+  interface DeviceResponse
+  interface RoutineResponse
+
+  class DeviceAssembler
+  class RoutineAssembler
+
+  class DevicesApiService {
+    +updateStatus(deviceId: number, status: DeviceStatus): Observable<DeviceResponse>
+  }
+
+  class RoutinesApiService {
+    +updateEnabled(routineId: number, enabled: boolean): Observable<RoutineResponse>
+  }
+
+  class RoutineConflictCheckerService {
+    +hasConflict(candidate: Routine, routines: Routine[]): boolean
+  }
+
+  class DeviceControlFacade {
+    -devicesSignal
+    -routinesSignal
+    -loadingSignal
+    -errorSignal
+    +devices()
+    +routines()
+    +totalDevices()
+    +activeDevices()
+    +totalCurrentWatts()
+    +totalRoutines()
+    +enabledRoutines()
+    +loadDevices(): Promise<void>
+    +loadRoutines(): Promise<void>
+    +addDevice(payload: CreateDeviceDto): Promise<void>
+    +toggleDevice(deviceId: number): Promise<void>
+    +removeDevice(deviceId: number): Promise<void>
+    +addRoutine(payload: CreateRoutineDto): Promise<void>
+    +toggleRoutine(routineId: number): Promise<void>
+    +removeRoutine(routineId: number): Promise<void>
+    +getDeviceName(deviceId: number): string
+  }
+
+  class DevicesPageComponent
+  class RoutinesPageComponent
+  class DeviceCardComponent
+  class DeviceListComponent
+  class RoutineListComponent
+}
+
+package "Energy Monitoring" {
+  class EnergyReading {
+    -_deviceName: string
+    -_watts: number
+    -_recordedAt: string
+    -_status: EnergyReadingStatus
+    +isHigh: boolean
+  }
+
+  class FilterReadingsDto {
+    +startDate: string
+    +endDate: string
+  }
+
+  interface EnergyReadingResource
+  interface EnergyReadingResponse
+
+  class EnergyReadingAssembler
+
+  class ReadingsApiService {
+    +findAll(): Observable<EnergyReadingResponse[]>
+    +findByDateRange(startDate: string, endDate: string): Observable<EnergyReadingResponse[]>
+  }
+
+  class EnergyRecommendationService {
+    +generateRecommendation(readings: EnergyReading[]): string
+  }
+
+  class EnergyMonitoringFacade {
+    -allReadingsSignal
+    -readingsSignal
+    -loadingSignal
+    -errorSignal
+    +readings()
+    +loading()
+    +error()
+    +totalWatts()
+    +averageWatts()
+    +highestReading()
+    +recommendationKey()
+    +loadReadings(): Promise<void>
+    +filterReadings(payload: FilterReadingsDto): void
+    +resetFilter(): void
+    +exportCsv(): Promise<void>
+  }
+
+  class EnergyDashboardPageComponent
+  class EnergyHistoryPageComponent
+  class MetricsCardsComponent
+  class UsageChartComponent
+}
+
+package "Notifications" {
+  class Alert {
+    -_title: string
+    -_message: string
+    -_level: AlertLevel
+    -_createdAt: string
+    -_read: boolean
+    +unread: boolean
+    +markAsRead(): void
+  }
+
+  class CreateAlertDto {
+    +title: string
+    +message: string
+    +level: AlertLevel
+  }
+
+  class MarkAlertAsReadDto {
+    +alertId: number
+  }
+
+  interface AlertResource
+  interface AlertResponse
+
+  class AlertAssembler
+
+  class AlertsApiService {
+    +markAsRead(alertId: number): Observable<AlertResponse>
+  }
+
+  class AlertPriorityService {
+    +sortByPriorityAndDate(alerts: Alert[]): Alert[]
+  }
+
+  class NotificationsFacade {
+    -alertsSignal
+    -loadingSignal
+    -errorSignal
+    +alerts()
+    +loading()
+    +error()
+    +unreadCount()
+    +sortedAlerts()
+    +loadAlerts(): Promise<void>
+    +createAlert(payload: CreateAlertDto): Promise<void>
+    +markAsRead(payload: MarkAlertAsReadDto): Promise<void>
+  }
+
+  class AlertsPageComponent
+  class AlertListComponent
+}
+
+BaseEntity <|-- User
+BaseEntity <|-- AccessProfile
+BaseEntity <|-- Plan
+BaseEntity <|-- Subscription
+BaseEntity <|-- Payment
+BaseEntity <|-- Device
+BaseEntity <|-- Routine
+BaseEntity <|-- EnergyReading
+BaseEntity <|-- Alert
+
+BaseResource <|.. SignInResource
+BaseResource <|.. SignUpResource
+BaseResource <|.. PlanResource
+BaseResource <|.. SubscriptionResource
+BaseResource <|.. PaymentResource
+BaseResource <|.. DeviceResource
+BaseResource <|.. RoutineResource
+BaseResource <|.. EnergyReadingResource
+BaseResource <|.. AlertResource
+
+BaseResponse <|.. UserResponse
+BaseResponse <|.. AccessProfileResponse
+BaseResponse <|.. PlanResponse
+BaseResponse <|.. SubscriptionResponse
+BaseResponse <|.. PaymentResponse
+BaseResponse <|.. DeviceResponse
+BaseResponse <|.. RoutineResponse
+BaseResponse <|.. EnergyReadingResponse
+BaseResponse <|.. AlertResponse
+
+BaseAssembler <|-- UserAssembler
+BaseAssembler <|-- AccessProfileAssembler
+BaseAssembler <|-- PlanAssembler
+BaseAssembler <|-- SubscriptionAssembler
+BaseAssembler <|-- PaymentAssembler
+BaseAssembler <|-- DeviceAssembler
+BaseAssembler <|-- RoutineAssembler
+BaseAssembler <|-- EnergyReadingAssembler
+BaseAssembler <|-- AlertAssembler
+
+BaseApiService <|-- PlansApiService
+BaseApiService <|-- SubscriptionsApiService
+BaseApiService <|-- PaymentsApiService
+BaseApiService <|-- DevicesApiService
+BaseApiService <|-- RoutinesApiService
+BaseApiService <|-- ReadingsApiService
+BaseApiService <|-- AlertsApiService
+
+UserAssembler --> User
+UserAssembler --> UserResponse
+AccessProfileAssembler --> AccessProfile
+AccessProfileAssembler --> AccessProfileResponse
+
+PlanAssembler --> Plan
+PlanAssembler --> PlanResource
+PlanAssembler --> PlanResponse
+SubscriptionAssembler --> Subscription
+SubscriptionAssembler --> SubscriptionResource
+SubscriptionAssembler --> SubscriptionResponse
+PaymentAssembler --> Payment
+PaymentAssembler --> PaymentResource
+PaymentAssembler --> PaymentResponse
+
+DeviceAssembler --> Device
+DeviceAssembler --> DeviceResource
+DeviceAssembler --> DeviceResponse
+RoutineAssembler --> Routine
+RoutineAssembler --> RoutineResource
+RoutineAssembler --> RoutineResponse
+
+EnergyReadingAssembler --> EnergyReading
+EnergyReadingAssembler --> EnergyReadingResource
+EnergyReadingAssembler --> EnergyReadingResponse
+
+AlertAssembler --> Alert
+AlertAssembler --> AlertResource
+AlertAssembler --> AlertResponse
+
+AuthSessionService --> LocalStorageService
+UiPreferencesService --> LocalStorageService
+UiPreferencesService --> ThemeService
+TranslationFacadeService --> UiPreferencesService
+AppLayoutComponent --> AuthSessionService
+AppLayoutComponent --> UiPreferencesService
+AppLayoutComponent --> TranslationFacadeService
+AppLayoutComponent --> IamFacade
+ActiveSubscriptionGuard --> BillingFacade
+
+IamApiService --> SignInResource
+IamApiService --> SignUpResource
+IamApiService --> UserResponse
+IamApiService --> AccessProfileResponse
+IamFacade --> IamApiService
+IamFacade --> UserAssembler
+IamFacade --> AccessProfileAssembler
+IamFacade --> AuthSessionService
+IamFacade --> SignInDto
+IamFacade --> SignUpDto
+LoginPageComponent --> IamFacade
+RegisterPageComponent --> IamFacade
+
+PlansApiService --> PlanResource
+PlansApiService --> PlanResponse
+SubscriptionsApiService --> SubscriptionResource
+SubscriptionsApiService --> SubscriptionResponse
+PaymentsApiService --> PaymentResource
+PaymentsApiService --> PaymentResponse
+BillingFacade --> PlansApiService
+BillingFacade --> SubscriptionsApiService
+BillingFacade --> PaymentsApiService
+BillingFacade --> PlanAssembler
+BillingFacade --> SubscriptionAssembler
+BillingFacade --> PaymentAssembler
+BillingFacade --> SubscriptionPolicyService
+BillingFacade --> AuthSessionService
+BillingFacade --> SubscribeDto
+BillingFacade --> CancelSubscriptionDto
+BillingFacade --> ProcessPaymentDto
+PlansPageComponent --> BillingFacade
+PlansPageComponent --> PlanCardComponent
+PlansPageComponent --> PaymentFormComponent
+PlanCardComponent --> Plan
+PaymentFormComponent --> Plan
+PaymentFormComponent --> ProcessPaymentDto
+
+DevicesApiService --> DeviceResource
+DevicesApiService --> DeviceResponse
+RoutinesApiService --> RoutineResource
+RoutinesApiService --> RoutineResponse
+DeviceControlFacade --> DevicesApiService
+DeviceControlFacade --> RoutinesApiService
+DeviceControlFacade --> DeviceAssembler
+DeviceControlFacade --> RoutineAssembler
+DeviceControlFacade --> RoutineConflictCheckerService
+DeviceControlFacade --> BillingFacade
+DeviceControlFacade --> PlanPermissionService
+DeviceControlFacade --> CreateDeviceDto
+DeviceControlFacade --> CreateRoutineDto
+DeviceControlFacade --> UpdateDeviceStatusDto
+DevicesPageComponent --> DeviceControlFacade
+DevicesPageComponent --> DeviceListComponent
+DeviceListComponent --> DeviceCardComponent
+DeviceCardComponent --> Device
+RoutinesPageComponent --> DeviceControlFacade
+RoutinesPageComponent --> RoutineListComponent
+RoutineListComponent --> Routine
+
+ReadingsApiService --> EnergyReadingResource
+ReadingsApiService --> EnergyReadingResponse
+EnergyMonitoringFacade --> ReadingsApiService
+EnergyMonitoringFacade --> EnergyReadingAssembler
+EnergyMonitoringFacade --> EnergyRecommendationService
+EnergyMonitoringFacade --> BillingFacade
+EnergyMonitoringFacade --> PlanPermissionService
+EnergyMonitoringFacade --> FilterReadingsDto
+EnergyDashboardPageComponent --> EnergyMonitoringFacade
+EnergyDashboardPageComponent --> MetricsCardsComponent
+EnergyDashboardPageComponent --> UsageChartComponent
+EnergyHistoryPageComponent --> EnergyMonitoringFacade
+MetricsCardsComponent --> EnergyMonitoringFacade
+UsageChartComponent --> EnergyReading
+
+AlertsApiService --> AlertResource
+AlertsApiService --> AlertResponse
+NotificationsFacade --> AlertsApiService
+NotificationsFacade --> AlertAssembler
+NotificationsFacade --> AlertPriorityService
+NotificationsFacade --> BillingFacade
+NotificationsFacade --> PlanPermissionService
+NotificationsFacade --> CreateAlertDto
+NotificationsFacade --> MarkAlertAsReadDto
+AlertsPageComponent --> NotificationsFacade
+AlertsPageComponent --> AlertListComponent
+AlertListComponent --> Alert
+
+HomePageComponent --> DeviceControlFacade
+HomePageComponent --> EnergyMonitoringFacade
+HomePageComponent --> NotificationsFacade
+HomePageComponent --> BillingFacade
+
+User "1" -- "*" Subscription
+User "1" -- "*" Payment
+User "1" -- "*" Device
+User "1" -- "*" Routine
+User "1" -- "*" EnergyReading
+User "1" -- "*" Alert
+Plan "1" -- "*" Subscription
+Plan "1" -- "*" Payment
+Device "1" -- "*" Routine
+Device "1" -- "*" EnergyReading
+Device "0..1" -- "*" Alert
+
+@enduml
