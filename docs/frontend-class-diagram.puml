@@ -1,10 +1,33 @@
 @startuml
-title ElectroCorp - Frontend Class Diagram Updated
+title ElectroCorp - Frontend Class Diagram Fully Connected
 
 skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' =========================================================
+' SHARED
+' =========================================================
 
 package "Shared" {
+  class App {
+    +ngOnInit(): void
+    -updatePageTitle(): void
+  }
+
+  class AppRouter {
+    +routes: Routes
+    +navigate(path: string): void
+  }
+
+  class RouterOutlet {
+    +rendersActivePage(): void
+  }
+
+  class TitleService {
+    +setTitle(title: string): void
+  }
+
   abstract class BaseEntity<TId> {
     -_id: TId
     +id: TId
@@ -83,14 +106,20 @@ package "Shared" {
     +signOut(): Promise<void>
   }
 
+  class FooterComponent
+
   class HomePageComponent {
     +ngOnInit(): Promise<void>
   }
 
   class AboutPageComponent
+
   class NotFoundPageComponent
-  class FooterComponent
 }
+
+' =========================================================
+' IAM
+' =========================================================
 
 package "IAM" {
   class User {
@@ -148,6 +177,7 @@ package "IAM" {
   }
 
   class UserAssembler
+
   class AccessProfileAssembler
 
   class IamApiService {
@@ -185,6 +215,10 @@ package "IAM" {
     +handleSubmit(): Promise<void>
   }
 }
+
+' =========================================================
+' BILLING
+' =========================================================
 
 package "Billing" {
   class Plan {
@@ -252,10 +286,13 @@ package "Billing" {
   interface PaymentResponse
 
   class PlanAssembler
+
   class SubscriptionAssembler
+
   class PaymentAssembler
 
   class PlansApiService
+
   class SubscriptionsApiService {
     +findActiveByUserId(userId: number): Observable<SubscriptionResponse[]>
     +cancelSubscription(subscriptionId: number): Observable<SubscriptionResponse>
@@ -331,6 +368,10 @@ package "Billing" {
   }
 }
 
+' =========================================================
+' DEVICE CONTROL
+' =========================================================
+
 package "Device Control" {
   class Device {
     -_name: string
@@ -371,10 +412,12 @@ package "Device Control" {
 
   interface DeviceResource
   interface RoutineResource
+
   interface DeviceResponse
   interface RoutineResponse
 
   class DeviceAssembler
+
   class RoutineAssembler
 
   class DevicesApiService {
@@ -413,11 +456,28 @@ package "Device Control" {
   }
 
   class DevicesPageComponent
+
   class RoutinesPageComponent
-  class DeviceCardComponent
-  class DeviceListComponent
-  class RoutineListComponent
+
+  class DeviceCardComponent {
+    +device: Device
+    +onToggle(): void
+    +onRemove(): void
+  }
+
+  class DeviceListComponent {
+    +devices: Device[]
+  }
+
+  class RoutineListComponent {
+    +routines: Routine[]
+    +getDeviceName(deviceId: number): string
+  }
 }
+
+' =========================================================
+' ENERGY MONITORING
+' =========================================================
 
 package "Energy Monitoring" {
   class EnergyReading {
@@ -434,6 +494,7 @@ package "Energy Monitoring" {
   }
 
   interface EnergyReadingResource
+
   interface EnergyReadingResponse
 
   class EnergyReadingAssembler
@@ -466,10 +527,24 @@ package "Energy Monitoring" {
   }
 
   class EnergyDashboardPageComponent
+
   class EnergyHistoryPageComponent
-  class MetricsCardsComponent
-  class UsageChartComponent
+
+  class MetricsCardsComponent {
+    +totalWatts: number
+    +averageWatts: number
+    +highestReading: number
+  }
+
+  class UsageChartComponent {
+    +readings: EnergyReading[]
+    +getBarHeight(watts: number): number
+  }
 }
+
+' =========================================================
+' NOTIFICATIONS
+' =========================================================
 
 package "Notifications" {
   class Alert {
@@ -493,6 +568,7 @@ package "Notifications" {
   }
 
   interface AlertResource
+
   interface AlertResponse
 
   class AlertAssembler
@@ -520,8 +596,15 @@ package "Notifications" {
   }
 
   class AlertsPageComponent
-  class AlertListComponent
+
+  class AlertListComponent {
+    +alerts: Alert[]
+  }
 }
+
+' =========================================================
+' BASE INHERITANCE / IMPLEMENTATION
+' =========================================================
 
 BaseEntity <|-- User
 BaseEntity <|-- AccessProfile
@@ -571,148 +654,307 @@ BaseApiService <|-- RoutinesApiService
 BaseApiService <|-- ReadingsApiService
 BaseApiService <|-- AlertsApiService
 
-UserAssembler --> User
-UserAssembler --> UserResponse
-AccessProfileAssembler --> AccessProfile
-AccessProfileAssembler --> AccessProfileResponse
+BaseApiService o-- BaseAssembler : uses
+BaseApiService --> BaseResource : sends
+BaseApiService --> BaseResponse : receives
 
-PlanAssembler --> Plan
-PlanAssembler --> PlanResource
-PlanAssembler --> PlanResponse
-SubscriptionAssembler --> Subscription
-SubscriptionAssembler --> SubscriptionResource
-SubscriptionAssembler --> SubscriptionResponse
-PaymentAssembler --> Payment
-PaymentAssembler --> PaymentResource
-PaymentAssembler --> PaymentResponse
+' =========================================================
+' ROUTING / LAYOUT / PAGE CONNECTIONS
+' =========================================================
 
-DeviceAssembler --> Device
-DeviceAssembler --> DeviceResource
-DeviceAssembler --> DeviceResponse
-RoutineAssembler --> Routine
-RoutineAssembler --> RoutineResource
-RoutineAssembler --> RoutineResponse
+App --> AppLayoutComponent : bootstraps
+App --> AppRouter : listens navigation
+App --> TitleService : updates tab title
 
-EnergyReadingAssembler --> EnergyReading
-EnergyReadingAssembler --> EnergyReadingResource
-EnergyReadingAssembler --> EnergyReadingResponse
+AppLayoutComponent --> RouterOutlet : contains
+AppLayoutComponent --> FooterComponent : renders
+AppLayoutComponent --> AuthSessionService : reads session
+AppLayoutComponent --> UiPreferencesService : reads preferences
+AppLayoutComponent --> TranslationFacadeService : changes language
+AppLayoutComponent --> IamFacade : signs out
 
-AlertAssembler --> Alert
-AlertAssembler --> AlertResource
-AlertAssembler --> AlertResponse
+AppRouter --> RouterOutlet : activates
 
-AuthSessionService --> LocalStorageService
-UiPreferencesService --> LocalStorageService
-UiPreferencesService --> ThemeService
-TranslationFacadeService --> UiPreferencesService
-AppLayoutComponent --> AuthSessionService
-AppLayoutComponent --> UiPreferencesService
-AppLayoutComponent --> TranslationFacadeService
-AppLayoutComponent --> IamFacade
-ActiveSubscriptionGuard --> BillingFacade
+AppRouter --> LoginPageComponent : route /iam/login
+AppRouter --> RegisterPageComponent : route /iam/register
+AppRouter --> HomePageComponent : route /home
+AppRouter --> AboutPageComponent : route /about
+AppRouter --> NotFoundPageComponent : route /**
+AppRouter --> PlansPageComponent : route /billing/plans
+AppRouter --> DevicesPageComponent : route /device-control/devices
+AppRouter --> RoutinesPageComponent : route /device-control/routines
+AppRouter --> EnergyDashboardPageComponent : route /energy-monitoring/dashboard
+AppRouter --> EnergyHistoryPageComponent : route /energy-monitoring/history
+AppRouter --> AlertsPageComponent : route /notifications/alerts
 
-IamApiService --> SignInResource
-IamApiService --> SignUpResource
-IamApiService --> UserResponse
-IamApiService --> AccessProfileResponse
-IamFacade --> IamApiService
-IamFacade --> UserAssembler
-IamFacade --> AccessProfileAssembler
-IamFacade --> AuthSessionService
-IamFacade --> SignInDto
-IamFacade --> SignUpDto
-LoginPageComponent --> IamFacade
-RegisterPageComponent --> IamFacade
+RouterOutlet --> LoginPageComponent : renders
+RouterOutlet --> RegisterPageComponent : renders
+RouterOutlet --> HomePageComponent : renders
+RouterOutlet --> AboutPageComponent : renders
+RouterOutlet --> NotFoundPageComponent : renders
+RouterOutlet --> PlansPageComponent : renders
+RouterOutlet --> DevicesPageComponent : renders
+RouterOutlet --> RoutinesPageComponent : renders
+RouterOutlet --> EnergyDashboardPageComponent : renders
+RouterOutlet --> EnergyHistoryPageComponent : renders
+RouterOutlet --> AlertsPageComponent : renders
 
-PlansApiService --> PlanResource
-PlansApiService --> PlanResponse
-SubscriptionsApiService --> SubscriptionResource
-SubscriptionsApiService --> SubscriptionResponse
-PaymentsApiService --> PaymentResource
-PaymentsApiService --> PaymentResponse
-BillingFacade --> PlansApiService
-BillingFacade --> SubscriptionsApiService
-BillingFacade --> PaymentsApiService
-BillingFacade --> PlanAssembler
-BillingFacade --> SubscriptionAssembler
-BillingFacade --> PaymentAssembler
-BillingFacade --> SubscriptionPolicyService
-BillingFacade --> AuthSessionService
-BillingFacade --> SubscribeDto
-BillingFacade --> CancelSubscriptionDto
-BillingFacade --> ProcessPaymentDto
-PlansPageComponent --> BillingFacade
-PlansPageComponent --> PlanCardComponent
-PlansPageComponent --> PaymentFormComponent
-PlanCardComponent --> Plan
-PaymentFormComponent --> Plan
-PaymentFormComponent --> ProcessPaymentDto
+AboutPageComponent --> TranslationFacadeService : uses translations
+AboutPageComponent --> AppLayoutComponent : displayed inside layout
 
-DevicesApiService --> DeviceResource
-DevicesApiService --> DeviceResponse
-RoutinesApiService --> RoutineResource
-RoutinesApiService --> RoutineResponse
-DeviceControlFacade --> DevicesApiService
-DeviceControlFacade --> RoutinesApiService
-DeviceControlFacade --> DeviceAssembler
-DeviceControlFacade --> RoutineAssembler
-DeviceControlFacade --> RoutineConflictCheckerService
-DeviceControlFacade --> BillingFacade
-DeviceControlFacade --> PlanPermissionService
-DeviceControlFacade --> CreateDeviceDto
-DeviceControlFacade --> CreateRoutineDto
-DeviceControlFacade --> UpdateDeviceStatusDto
-DevicesPageComponent --> DeviceControlFacade
-DevicesPageComponent --> DeviceListComponent
-DeviceListComponent --> DeviceCardComponent
-DeviceCardComponent --> Device
-RoutinesPageComponent --> DeviceControlFacade
-RoutinesPageComponent --> RoutineListComponent
-RoutineListComponent --> Routine
+NotFoundPageComponent --> TranslationFacadeService : uses translations
+NotFoundPageComponent --> AppLayoutComponent : displayed inside layout
 
-ReadingsApiService --> EnergyReadingResource
-ReadingsApiService --> EnergyReadingResponse
-EnergyMonitoringFacade --> ReadingsApiService
-EnergyMonitoringFacade --> EnergyReadingAssembler
-EnergyMonitoringFacade --> EnergyRecommendationService
-EnergyMonitoringFacade --> BillingFacade
-EnergyMonitoringFacade --> PlanPermissionService
-EnergyMonitoringFacade --> FilterReadingsDto
-EnergyDashboardPageComponent --> EnergyMonitoringFacade
-EnergyDashboardPageComponent --> MetricsCardsComponent
-EnergyDashboardPageComponent --> UsageChartComponent
-EnergyHistoryPageComponent --> EnergyMonitoringFacade
-MetricsCardsComponent --> EnergyMonitoringFacade
-UsageChartComponent --> EnergyReading
+FooterComponent --> TranslationFacadeService : uses translations
+FooterComponent --> AppLayoutComponent : displayed inside layout
 
-AlertsApiService --> AlertResource
-AlertsApiService --> AlertResponse
-NotificationsFacade --> AlertsApiService
-NotificationsFacade --> AlertAssembler
-NotificationsFacade --> AlertPriorityService
-NotificationsFacade --> BillingFacade
-NotificationsFacade --> PlanPermissionService
-NotificationsFacade --> CreateAlertDto
-NotificationsFacade --> MarkAlertAsReadDto
-AlertsPageComponent --> NotificationsFacade
-AlertsPageComponent --> AlertListComponent
-AlertListComponent --> Alert
+ActiveSubscriptionGuard --> BillingFacade : verifies subscription
+ActiveSubscriptionGuard --> AuthSessionService : identifies user
+AppRouter --> ActiveSubscriptionGuard : protects private routes
 
-HomePageComponent --> DeviceControlFacade
-HomePageComponent --> EnergyMonitoringFacade
-HomePageComponent --> NotificationsFacade
-HomePageComponent --> BillingFacade
+' =========================================================
+' SHARED SERVICE CONNECTIONS
+' =========================================================
 
-User "1" -- "*" Subscription
-User "1" -- "*" Payment
-User "1" -- "*" Device
-User "1" -- "*" Routine
-User "1" -- "*" EnergyReading
-User "1" -- "*" Alert
-Plan "1" -- "*" Subscription
-Plan "1" -- "*" Payment
-Device "1" -- "*" Routine
-Device "1" -- "*" EnergyReading
-Device "0..1" -- "*" Alert
+AuthSessionService --> LocalStorageService : persists session
+UiPreferencesService --> LocalStorageService : persists preferences
+UiPreferencesService --> ThemeService : applies theme
+TranslationFacadeService --> UiPreferencesService : reads selected language
+
+' =========================================================
+' IAM CONNECTIONS
+' =========================================================
+
+UserAssembler --> User : creates entity
+UserAssembler --> UserResponse : maps from response
+AccessProfileAssembler --> AccessProfile : creates entity
+AccessProfileAssembler --> AccessProfileResponse : maps from response
+
+IamApiService --> SignInResource : sends
+IamApiService --> SignUpResource : sends
+IamApiService --> UserResponse : receives
+IamApiService --> AccessProfileResponse : receives
+
+IamFacade --> IamApiService : authentication API
+IamFacade --> UserAssembler : maps user
+IamFacade --> AccessProfileAssembler : maps profiles
+IamFacade --> AuthSessionService : starts/closes session
+IamFacade --> SignInDto : receives login input
+IamFacade --> SignUpDto : receives register input
+IamFacade --> User : stores current user
+IamFacade --> AccessProfile : stores access profiles
+
+LoginPageComponent --> IamFacade : submits credentials
+LoginPageComponent --> SignInDto : builds dto
+
+RegisterPageComponent --> IamFacade : submits registration
+RegisterPageComponent --> SignUpDto : builds dto
+
+User "1" -- "*" AccessProfile : has profiles
+
+' =========================================================
+' BILLING CONNECTIONS
+' =========================================================
+
+PlanAssembler --> Plan : creates entity
+PlanAssembler --> PlanResource : creates resource
+PlanAssembler --> PlanResponse : maps from response
+
+SubscriptionAssembler --> Subscription : creates entity
+SubscriptionAssembler --> SubscriptionResource : creates resource
+SubscriptionAssembler --> SubscriptionResponse : maps from response
+
+PaymentAssembler --> Payment : creates entity
+PaymentAssembler --> PaymentResource : creates resource
+PaymentAssembler --> PaymentResponse : maps from response
+
+PlansApiService --> PlanResource : sends
+PlansApiService --> PlanResponse : receives
+PlansApiService --> PlanAssembler : maps
+
+SubscriptionsApiService --> SubscriptionResource : sends
+SubscriptionsApiService --> SubscriptionResponse : receives
+SubscriptionsApiService --> SubscriptionAssembler : maps
+
+PaymentsApiService --> PaymentResource : sends
+PaymentsApiService --> PaymentResponse : receives
+PaymentsApiService --> PaymentAssembler : maps
+
+BillingFacade --> PlansApiService : loads plans
+BillingFacade --> SubscriptionsApiService : manages subscriptions
+BillingFacade --> PaymentsApiService : registers payments
+BillingFacade --> PlanAssembler : maps plans
+BillingFacade --> SubscriptionAssembler : maps subscriptions
+BillingFacade --> PaymentAssembler : maps payments
+BillingFacade --> SubscriptionPolicyService : validates plan changes
+BillingFacade --> AuthSessionService : gets current user id
+BillingFacade --> SubscribeDto : receives subscription request
+BillingFacade --> CancelSubscriptionDto : receives cancellation request
+BillingFacade --> ProcessPaymentDto : receives payment request
+BillingFacade --> Plan : stores plan list
+BillingFacade --> Subscription : stores active subscription
+BillingFacade --> Payment : stores last payment
+
+SubscriptionPolicyService --> Subscription : evaluates current state
+SubscriptionPolicyService --> Plan : evaluates target plan
+PlanPermissionService --> Plan : reads plan code and limits
+
+PlansPageComponent --> BillingFacade : uses billing state/actions
+PlansPageComponent --> PlanCardComponent : renders plan cards
+PlansPageComponent --> PaymentFormComponent : opens checkout
+PlansPageComponent --> Plan : selects plan
+PlansPageComponent --> ProcessPaymentDto : receives payment confirmation
+
+PlanCardComponent --> Plan : displays
+PlanCardComponent --> PlansPageComponent : emits subscribe event
+
+PaymentFormComponent --> Plan : displays selected plan
+PaymentFormComponent --> ProcessPaymentDto : builds dto
+PaymentFormComponent --> PlansPageComponent : emits confirm/cancel
+
+User "1" -- "*" Subscription : owns
+User "1" -- "*" Payment : makes
+Plan "1" -- "*" Subscription : selected by
+Plan "1" -- "*" Payment : paid through
+Subscription "1" -- "*" Payment : payment history
+
+' =========================================================
+' DEVICE CONTROL CONNECTIONS
+' =========================================================
+
+DeviceAssembler --> Device : creates entity
+DeviceAssembler --> DeviceResource : creates resource
+DeviceAssembler --> DeviceResponse : maps from response
+
+RoutineAssembler --> Routine : creates entity
+RoutineAssembler --> RoutineResource : creates resource
+RoutineAssembler --> RoutineResponse : maps from response
+
+DevicesApiService --> DeviceResource : sends
+DevicesApiService --> DeviceResponse : receives
+DevicesApiService --> DeviceAssembler : maps
+
+RoutinesApiService --> RoutineResource : sends
+RoutinesApiService --> RoutineResponse : receives
+RoutinesApiService --> RoutineAssembler : maps
+
+DeviceControlFacade --> DevicesApiService : manages devices
+DeviceControlFacade --> RoutinesApiService : manages routines
+DeviceControlFacade --> DeviceAssembler : maps devices
+DeviceControlFacade --> RoutineAssembler : maps routines
+DeviceControlFacade --> RoutineConflictCheckerService : validates routine conflict
+DeviceControlFacade --> BillingFacade : reads active plan
+DeviceControlFacade --> PlanPermissionService : validates plan limits
+DeviceControlFacade --> CreateDeviceDto : receives device creation
+DeviceControlFacade --> CreateRoutineDto : receives routine creation
+DeviceControlFacade --> UpdateDeviceStatusDto : receives status update
+DeviceControlFacade --> Device : stores devices
+DeviceControlFacade --> Routine : stores routines
+
+RoutineConflictCheckerService --> Routine : compares routines
+PlanPermissionService --> Device : limits quantity
+PlanPermissionService --> Routine : limits quantity
+
+DevicesPageComponent --> DeviceControlFacade : uses device state/actions
+DevicesPageComponent --> DeviceListComponent : renders list
+DevicesPageComponent --> CreateDeviceDto : builds dto
+
+DeviceListComponent --> DeviceCardComponent : renders cards
+DeviceListComponent --> Device : receives collection
+DeviceCardComponent --> Device : displays
+DeviceCardComponent --> DeviceControlFacade : emits toggle/remove indirectly
+
+RoutinesPageComponent --> DeviceControlFacade : uses routine state/actions
+RoutinesPageComponent --> RoutineListComponent : renders routines
+RoutinesPageComponent --> CreateRoutineDto : builds dto
+
+RoutineListComponent --> Routine : displays
+RoutineListComponent --> DeviceControlFacade : resolves device name
+RoutineListComponent --> RoutinesPageComponent : emits toggle/remove
+
+User "1" -- "*" Device : owns
+User "1" -- "*" Routine : creates
+Device "1" -- "*" Routine : scheduled by
+
+' =========================================================
+' ENERGY MONITORING CONNECTIONS
+' =========================================================
+
+EnergyReadingAssembler --> EnergyReading : creates entity
+EnergyReadingAssembler --> EnergyReadingResource : creates resource
+EnergyReadingAssembler --> EnergyReadingResponse : maps from response
+
+ReadingsApiService --> EnergyReadingResource : sends
+ReadingsApiService --> EnergyReadingResponse : receives
+ReadingsApiService --> EnergyReadingAssembler : maps
+
+EnergyMonitoringFacade --> ReadingsApiService : loads readings
+EnergyMonitoringFacade --> EnergyReadingAssembler : maps readings
+EnergyMonitoringFacade --> EnergyRecommendationService : generates recommendation
+EnergyMonitoringFacade --> BillingFacade : reads active plan
+EnergyMonitoringFacade --> PlanPermissionService : validates export/history access
+EnergyMonitoringFacade --> FilterReadingsDto : receives filter input
+EnergyMonitoringFacade --> EnergyReading : stores readings
+
+EnergyRecommendationService --> EnergyReading : analyzes readings
+PlanPermissionService --> EnergyReading : limits advanced access
+
+EnergyDashboardPageComponent --> EnergyMonitoringFacade : uses energy state/actions
+EnergyDashboardPageComponent --> MetricsCardsComponent : renders metrics
+EnergyDashboardPageComponent --> UsageChartComponent : renders chart
+EnergyDashboardPageComponent --> FilterReadingsDto : builds filter dto
+
+EnergyHistoryPageComponent --> EnergyMonitoringFacade : uses readings/history
+EnergyHistoryPageComponent --> EnergyReading : displays table rows
+
+MetricsCardsComponent --> EnergyMonitoringFacade : receives computed metrics
+UsageChartComponent --> EnergyReading : displays chart data
+
+User "1" -- "*" EnergyReading : owns
+Device "1" -- "*" EnergyReading : produces
+
+' =========================================================
+' NOTIFICATIONS CONNECTIONS
+' =========================================================
+
+AlertAssembler --> Alert : creates entity
+AlertAssembler --> AlertResource : creates resource
+AlertAssembler --> AlertResponse : maps from response
+
+AlertsApiService --> AlertResource : sends
+AlertsApiService --> AlertResponse : receives
+AlertsApiService --> AlertAssembler : maps
+
+NotificationsFacade --> AlertsApiService : manages alerts
+NotificationsFacade --> AlertAssembler : maps alerts
+NotificationsFacade --> AlertPriorityService : sorts alerts
+NotificationsFacade --> BillingFacade : reads active plan
+NotificationsFacade --> PlanPermissionService : validates alert limits
+NotificationsFacade --> CreateAlertDto : receives alert creation
+NotificationsFacade --> MarkAlertAsReadDto : receives read command
+NotificationsFacade --> Alert : stores alerts
+
+AlertPriorityService --> Alert : sorts by level/date
+PlanPermissionService --> Alert : limits quantity
+
+AlertsPageComponent --> NotificationsFacade : uses alert state/actions
+AlertsPageComponent --> AlertListComponent : renders alert list
+AlertsPageComponent --> CreateAlertDto : builds dto
+AlertsPageComponent --> MarkAlertAsReadDto : builds dto
+
+AlertListComponent --> Alert : displays
+AlertListComponent --> AlertsPageComponent : emits mark-as-read
+
+User "1" -- "*" Alert : receives
+Device "0..1" -- "*" Alert : may trigger
+
+' =========================================================
+' HOME DASHBOARD AGGREGATION
+' =========================================================
+
+HomePageComponent --> DeviceControlFacade : device/routine metrics
+HomePageComponent --> EnergyMonitoringFacade : energy metrics
+HomePageComponent --> NotificationsFacade : alert metrics
+HomePageComponent --> BillingFacade : active plan summary
 
 @enduml
