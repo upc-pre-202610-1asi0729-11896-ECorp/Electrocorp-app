@@ -1,0 +1,96 @@
+<section class="page">
+  <article class="page-header">
+    <div>
+      <p class="eyebrow">{{ 'devices.eyebrow' | translate }}</p>
+      <h1>{{ 'devices.title' | translate }}</h1>
+      <p>{{ 'devices.subtitle' | translate }}</p>
+    </div>
+
+    <div class="metrics">
+      <article>
+        <span>{{ 'devices.total' | translate }}</span>
+        <strong>{{ deviceControlFacade.totalDevices() }}</strong>
+      </article>
+
+      <article>
+        <span>{{ 'devices.active' | translate }}</span>
+        <strong>{{ deviceControlFacade.activeDevices() }}</strong>
+      </article>
+
+      <article>
+        <span>{{ 'devices.currentWatts' | translate }}</span>
+        <strong>{{ deviceControlFacade.totalCurrentWatts() }}W</strong>
+      </article>
+    </div>
+  </article>
+
+  <section class="content-grid">
+    <form class="form-card" (ngSubmit)="handleSubmit()">
+      <h2>{{ 'devices.addTitle' | translate }}</h2>
+
+      <label>
+        {{ 'devices.name' | translate }}
+        <input
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          required
+          placeholder="Smart plug"
+        />
+      </label>
+
+      <label>
+        {{ 'devices.room' | translate }}
+        <input
+          type="text"
+          name="room"
+          [(ngModel)]="room"
+          required
+          placeholder="Living room"
+        />
+      </label>
+
+      <label>
+        {{ 'devices.type' | translate }}
+        <select name="type" [(ngModel)]="type" required>
+          @for (deviceType of deviceTypes; track deviceType) {
+            <option [value]="deviceType">{{ deviceType }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        {{ 'devices.power' | translate }}
+        <input
+          type="number"
+          name="powerWatts"
+          [(ngModel)]="powerWatts"
+          required
+          min="1"
+        />
+      </label>
+
+      <button type="submit" [disabled]="deviceControlFacade.loading()">
+        @if (deviceControlFacade.loading()) {
+          {{ 'common.loading' | translate }}
+        } @else {
+          {{ 'devices.create' | translate }}
+        }
+      </button>
+
+      @if (deviceControlFacade.error()) {
+        <p class="error-message">
+          {{ deviceControlFacade.error()! | translate }}
+        </p>
+      }
+    </form>
+
+    <section class="list-card">
+      <app-device-list
+        [devices]="deviceControlFacade.devices()"
+        (toggle)="deviceControlFacade.toggleDevice($event)"
+        (remove)="deviceControlFacade.removeDevice($event)"
+      />
+    </section>
+  </section>
+</section>

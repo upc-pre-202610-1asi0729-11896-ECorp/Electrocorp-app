@@ -1,0 +1,40 @@
+<article class="plan-card" [class.current]="isCurrentPlan">
+  <p class="plan-code">{{ plan.code }}</p>
+
+  <div class="plan-heading">
+    <h3>{{ plan.name }}</h3>
+
+    @if (isCurrentPlan) {
+      <span class="current-badge">
+        {{ 'billing.currentPlan' | translate }}
+      </span>
+    }
+  </div>
+
+  <p class="description">
+    {{ getDescriptionKey(plan.code) | translate }}
+  </p>
+
+  <div class="price">
+    <strong>S/ {{ plan.monthlyPrice }}</strong>
+    <span>/ {{ 'billing.month' | translate }}</span>
+  </div>
+
+  <ul>
+    @for (featureKey of getFeatureKeys(plan.code); track featureKey) {
+      <li>{{ featureKey | translate }}</li>
+    }
+  </ul>
+
+  <button
+    type="button"
+    [disabled]="loading || isCurrentPlan"
+    (click)="onSubscribe()"
+  >
+    @if (isCurrentPlan) {
+      {{ 'billing.selected' | translate }}
+    } @else {
+      {{ 'billing.subscribe' | translate }}
+    }
+  </button>
+</article>

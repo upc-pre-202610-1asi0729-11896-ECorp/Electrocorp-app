@@ -1,0 +1,98 @@
+<section class="payment-backdrop">
+  <article class="payment-modal">
+    <div class="modal-header">
+      <div>
+        <p class="eyebrow">{{ 'billing.paymentEyebrow' | translate }}</p>
+        <h2>{{ 'billing.paymentTitle' | translate }}</h2>
+        <p>
+          {{ 'billing.selectedPlan' | translate }}:
+          <strong>{{ plan.name }}</strong>
+        </p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="onCancel()">
+        ✕
+      </button>
+    </div>
+
+    <div class="amount-card">
+      <span>{{ 'billing.amountToPay' | translate }}</span>
+      <strong>S/ {{ plan.monthlyPrice }}</strong>
+    </div>
+
+    <form class="payment-form" (ngSubmit)="onConfirm()">
+      <label>
+        {{ 'billing.holderName' | translate }}
+        <input
+          type="text"
+          name="holderName"
+          [(ngModel)]="holderName"
+          required
+          autocomplete="off"
+          placeholder="Jean Franck Loa Rojas"
+        />
+      </label>
+
+      <label>
+        {{ 'billing.cardNumber' | translate }}
+        <input
+          type="text"
+          name="cardNumber"
+          [ngModel]="cardNumber"
+          (ngModelChange)="onCardNumberChange($event)"
+          required
+          autocomplete="off"
+          inputmode="numeric"
+          maxlength="19"
+          placeholder="4111 1111 1111 1111"
+        />
+      </label>
+
+      <div class="row">
+        <label>
+          {{ 'billing.expirationDate' | translate }}
+          <input
+            type="text"
+            name="expirationDate"
+            [ngModel]="expirationDate"
+            (ngModelChange)="onExpirationDateChange($event)"
+            required
+            autocomplete="off"
+            inputmode="numeric"
+            maxlength="5"
+            placeholder="12/28"
+          />
+        </label>
+
+        <label>
+          {{ 'billing.cvv' | translate }}
+          <input
+            type="password"
+            name="cvv"
+            [ngModel]="cvv"
+            (ngModelChange)="onCvvChange($event)"
+            required
+            autocomplete="off"
+            inputmode="numeric"
+            maxlength="3"
+            placeholder="123"
+          />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary-btn" [disabled]="loading">
+          @if (loading) {
+            {{ 'common.loading' | translate }}
+          } @else {
+            {{ 'billing.confirmPayment' | translate }}
+          }
+        </button>
+
+        <button type="button" class="secondary-btn" (click)="onCancel()">
+          {{ 'billing.cancelPayment' | translate }}
+        </button>
+      </div>
+    </form>
+  </article>
+</section>

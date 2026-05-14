@@ -1,0 +1,15 @@
+<section class="chart">
+  @for (reading of readings; track reading.id) {
+    <article class="bar-item">
+      <div class="bar-track">
+        <div
+          class="bar-fill"
+          [style.height.px]="getBarHeight(reading.watts)"
+        ></div>
+      </div>
+
+      <strong>{{ reading.watts }}W</strong>
+      <span>{{ reading.recordedAt | date: 'yyyy-MM-dd' }}</span>
+    </article>
+  }
+</section>

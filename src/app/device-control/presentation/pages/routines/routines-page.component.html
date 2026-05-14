@@ -1,0 +1,95 @@
+<section class="page">
+  <article class="page-header">
+    <div>
+      <p class="eyebrow">{{ 'routines.eyebrow' | translate }}</p>
+      <h1>{{ 'routines.title' | translate }}</h1>
+      <p>{{ 'routines.subtitle' | translate }}</p>
+    </div>
+
+    <div class="metrics">
+      <article>
+        <span>{{ 'routines.total' | translate }}</span>
+        <strong>{{ deviceControlFacade.totalRoutines() }}</strong>
+      </article>
+
+      <article>
+        <span>{{ 'routines.active' | translate }}</span>
+        <strong>{{ deviceControlFacade.enabledRoutines() }}</strong>
+      </article>
+    </div>
+  </article>
+
+  <section class="content-grid">
+    <form class="form-card" (ngSubmit)="handleSubmit()">
+      <h2>{{ 'routines.addTitle' | translate }}</h2>
+
+      <label>
+        {{ 'routines.name' | translate }}
+        <input
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          required
+          placeholder="Turn off living room at night"
+        />
+      </label>
+
+      <label>
+        {{ 'routines.device' | translate }}
+        <select name="deviceId" [(ngModel)]="deviceId" required>
+          <option [ngValue]="null">
+            {{ 'routines.selectDevice' | translate }}
+          </option>
+
+          @for (device of deviceControlFacade.devices(); track device.id) {
+            <option [ngValue]="device.id">
+              {{ device.name }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <label>
+        {{ 'routines.action' | translate }}
+        <select name="action" [(ngModel)]="action" required>
+          @for (routineAction of routineActions; track routineAction) {
+            <option [value]="routineAction">{{ routineAction }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        {{ 'routines.time' | translate }}
+        <input
+          type="time"
+          name="scheduledTime"
+          [(ngModel)]="scheduledTime"
+          required
+        />
+      </label>
+
+      <button type="submit" [disabled]="deviceControlFacade.loading()">
+        @if (deviceControlFacade.loading()) {
+          {{ 'common.loading' | translate }}
+        } @else {
+          {{ 'routines.create' | translate }}
+        }
+      </button>
+
+      @if (deviceControlFacade.error()) {
+        <p class="error-message">
+          {{ deviceControlFacade.error()! | translate }}
+        </p>
+      }
+    </form>
+
+    <section class="list-card">
+      <app-routine-list
+        [routines]="deviceControlFacade.routines()"
+        [getDeviceName]="getDeviceName"
+        (toggle)="deviceControlFacade.toggleRoutine($event)"
+        (remove)="deviceControlFacade.removeRoutine($event)"
+      />
+    </section>
+  </section>
+</section>
