@@ -1,19 +1,24 @@
-import type { Plan } from '../model/plan.entity';
+import { Injectable } from '@angular/core';
 
+import { PlanCode } from '../model/plan.entity';
+import { Subscription } from '../model/subscription.entity';
+
+@Injectable({
+  providedIn: 'root',
+})
 export class SubscriptionPolicyService {
-    canSubscribeTo(plan: Plan): boolean {
-        return plan.monthlyPrice > 0;
-    }
+  canSubscribeToPlan(
+    currentSubscription: Subscription | null,
+    targetPlanCode: PlanCode
+  ): boolean {
+    if (!currentSubscription) return true;
 
-    getBusinessMessage(plan: Plan): string {
-        if (plan.code === 'ENTERPRISE') {
-            return 'Recommended for owners managing multiple business locations.';
-        }
+    if (!currentSubscription.isActive) return true;
 
-        if (plan.code === 'PROFESSIONAL') {
-            return 'Recommended for homes or small businesses with several devices.';
-        }
+    return currentSubscription.planCode !== targetPlanCode;
+  }
 
-        return 'Recommended for users who are starting with smart energy control.';
-    }
+  canCancelSubscription(subscription: Subscription | null): boolean {
+    return subscription !== null && subscription.isActive;
+  }
 }

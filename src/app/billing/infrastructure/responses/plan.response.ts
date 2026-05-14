@@ -1,9 +1,10 @@
-import type { PlanCode } from '../../domain/model/plan.entity';
+import { BaseResponse } from '../../../shared/infrastructure/responses/base.response';
+import { PlanCode } from '../../domain/model/plan.entity';
 
-export interface PlanResponse {
-    id: number;
-    code: PlanCode;
-    name: string;
-    monthlyPrice: number;
-    features: string[];
+export interface PlanResponse extends BaseResponse<number> {
+  code: PlanCode;
+  name: string;
+  monthlyPrice: number;
+  description: string;
+  features: string[];
 }

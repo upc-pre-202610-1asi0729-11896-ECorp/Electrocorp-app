@@ -1,15 +1,12 @@
-import type { RouteRecordRaw } from 'vue-router';
+import { Routes } from '@angular/router';
 
-const PlansView = () => import('../views/plans/PlansView.vue');
-
-export const billingRoutes: RouteRecordRaw[] = [
-    {
-        path: '/billing/plans',
-        name: 'billing-plans',
-        component: PlansView,
-        meta: {
-            title: 'ElectroCorp - Plans',
-            requiresAuth: true,
-        },
-    },
+export const BILLING_ROUTES: Routes = [
+  {
+    path: 'billing/plans',
+    data: { title: 'Plans' },
+    loadComponent: () =>
+      import('../pages/plans/plans-page.component').then(
+        (m) => m.PlansPageComponent
+      ),
+  },
 ];

@@ -1,15 +1,12 @@
-import type { RouteRecordRaw } from 'vue-router';
+import { Routes } from '@angular/router';
 
-const AlertsView = () => import('../views/alerts/AlertsView.vue');
-
-export const notificationsRoutes: RouteRecordRaw[] = [
-    {
-        path: '/notifications/alerts',
-        name: 'notifications-alerts',
-        component: AlertsView,
-        meta: {
-            title: 'ElectroCorp - Alerts',
-            requiresAuth: true,
-        },
-    },
+export const NOTIFICATIONS_ROUTES: Routes = [
+  {
+    path: 'notifications/alerts',
+    data: { title: 'Alerts' },
+    loadComponent: () =>
+      import('../pages/alerts/alerts-page.component').then(
+        (m) => m.AlertsPageComponent
+      ),
+  },
 ];

@@ -1,8 +1,9 @@
-import type { DeviceType } from '../../domain/model/device.entity';
+import { BaseResource } from '../../../shared/infrastructure/resources/base.resource';
+import { DeviceType } from '../../domain/model/device.entity';
 
-export interface DeviceResource {
-    name: string;
-    room: string;
-    type: DeviceType;
-    powerWatts: number;
+export interface DeviceResource extends BaseResource {
+  name: string;
+  room: string;
+  type: DeviceType;
+  powerWatts: number;
 }

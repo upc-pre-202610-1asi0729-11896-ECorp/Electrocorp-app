@@ -1,75 +1,56 @@
-export type DeviceStatus = 'ON' | 'OFF';
+import { BaseEntity } from '../../../shared/domain/model/base.entity';
+
 export type DeviceType = 'SMART_PLUG' | 'SMART_SWITCH' | 'LIGHT';
+export type DeviceStatus = 'ON' | 'OFF';
 
-export class Device {
-    private _id: number;
-    private _name: string;
-    private _type: DeviceType;
-    private _status: DeviceStatus;
-    private _room: string;
-    private _powerWatts: number;
+export class Device extends BaseEntity<number> {
+  private readonly _name: string;
+  private readonly _room: string;
+  private readonly _type: DeviceType;
+  private _status: DeviceStatus;
+  private readonly _powerWatts: number;
 
-    constructor(props: {
-        id: number;
-        name: string;
-        type: DeviceType;
-        status?: DeviceStatus;
-        room: string;
-        powerWatts: number;
-    }) {
-        this._id = props.id;
-        this._name = props.name;
-        this._type = props.type;
-        this._status = props.status ?? 'OFF';
-        this._room = props.room;
-        this._powerWatts = props.powerWatts;
-    }
+  constructor(props: {
+    id: number;
+    name: string;
+    room: string;
+    type: DeviceType;
+    status: DeviceStatus;
+    powerWatts: number;
+  }) {
+    super(props.id);
+    this._name = props.name;
+    this._room = props.room;
+    this._type = props.type;
+    this._status = props.status;
+    this._powerWatts = props.powerWatts;
+  }
 
-    get id(): number {
-        return this._id;
-    }
+  get name(): string {
+    return this._name;
+  }
 
-    get name(): string {
-        return this._name;
-    }
+  get room(): string {
+    return this._room;
+  }
 
-    set name(value: string) {
-        this._name = value;
-    }
+  get type(): DeviceType {
+    return this._type;
+  }
 
-    get type(): DeviceType {
-        return this._type;
-    }
+  get status(): DeviceStatus {
+    return this._status;
+  }
 
-    get status(): DeviceStatus {
-        return this._status;
-    }
+  get powerWatts(): number {
+    return this._powerWatts;
+  }
 
-    set status(value: DeviceStatus) {
-        this._status = value;
-    }
+  get isOn(): boolean {
+    return this._status === 'ON';
+  }
 
-    get room(): string {
-        return this._room;
-    }
-
-    set room(value: string) {
-        this._room = value;
-    }
-
-    get powerWatts(): number {
-        return this._powerWatts;
-    }
-
-    turnOn(): void {
-        this._status = 'ON';
-    }
-
-    turnOff(): void {
-        this._status = 'OFF';
-    }
-
-    toggle(): void {
-        this._status = this._status === 'ON' ? 'OFF' : 'ON';
-    }
+  toggleStatus(): void {
+    this._status = this._status === 'ON' ? 'OFF' : 'ON';
+  }
 }

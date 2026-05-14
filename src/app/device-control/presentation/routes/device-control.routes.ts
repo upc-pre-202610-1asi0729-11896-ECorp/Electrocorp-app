@@ -1,25 +1,20 @@
-import type { RouteRecordRaw } from 'vue-router';
+import { Routes } from '@angular/router';
 
-const DevicesView = () => import('../views/devices/DevicesView.vue');
-const RoutinesView = () => import('../views/routines/RoutinesView.vue');
-
-export const deviceControlRoutes: RouteRecordRaw[] = [
-    {
-        path: '/device-control/devices',
-        name: 'device-control-devices',
-        component: DevicesView,
-        meta: {
-            title: 'ElectroCorp - Devices',
-            requiresAuth: true,
-        },
-    },
-    {
-        path: '/device-control/routines',
-        name: 'device-control-routines',
-        component: RoutinesView,
-        meta: {
-            title: 'ElectroCorp - Routines',
-            requiresAuth: true,
-        },
-    },
+export const DEVICE_CONTROL_ROUTES: Routes = [
+  {
+    path: 'device-control/devices',
+    data: { title: 'Devices' },
+    loadComponent: () =>
+      import('../pages/devices/devices-page.component').then(
+        (m) => m.DevicesPageComponent
+      ),
+  },
+  {
+    path: 'device-control/routines',
+    data: { title: 'Routines' },
+    loadComponent: () =>
+      import('../pages/routines/routines-page.component').then(
+        (m) => m.RoutinesPageComponent
+      ),
+  },
 ];

@@ -1,11 +1,19 @@
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
 export class ThemeService {
-    applyTheme(isDarkMode: boolean): void {
-        const theme = isDarkMode ? 'dark' : 'light';
+  applyTheme(isDarkMode: boolean): void {
+    const root = document.documentElement;
 
-        document.documentElement.setAttribute('data-theme', theme);
-        document.body.setAttribute('data-theme', theme);
-
-        document.documentElement.classList.toggle('dark-theme', isDarkMode);
-        document.documentElement.classList.toggle('light-theme', !isDarkMode);
+    if (isDarkMode) {
+      root.classList.add('dark-theme');
+      root.classList.remove('light-theme');
+      return;
     }
+
+    root.classList.add('light-theme');
+    root.classList.remove('dark-theme');
+  }
 }

@@ -1,3 +1,3 @@
 export interface CancelSubscriptionDto {
-    subscriptionId: number;
+  subscriptionId: number;
 }

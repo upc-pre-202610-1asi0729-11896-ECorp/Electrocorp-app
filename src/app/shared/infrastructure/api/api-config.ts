@@ -1,2 +1,3 @@
-export const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ?? 'https://electrocorp-platform.onrender.com/';
+import { environment } from '../../../../environments/environment';
+
+export const API_BASE_URL = environment.apiBaseUrl.replace(/\/$/, '');

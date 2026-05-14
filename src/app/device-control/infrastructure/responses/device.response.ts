@@ -1,10 +1,13 @@
-import type { DeviceStatus, DeviceType } from '../../domain/model/device.entity';
+import { BaseResponse } from '../../../shared/infrastructure/responses/base.response';
+import {
+  DeviceStatus,
+  DeviceType,
+} from '../../domain/model/device.entity';
 
-export interface DeviceResponse {
-    id: number;
-    name: string;
-    type: DeviceType;
-    status: DeviceStatus;
-    room: string;
-    powerWatts: number;
+export interface DeviceResponse extends BaseResponse<number> {
+  name: string;
+  room: string;
+  type: DeviceType;
+  status: DeviceStatus;
+  powerWatts: number;
 }

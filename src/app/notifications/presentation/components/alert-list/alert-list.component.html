@@ -1,0 +1,43 @@
+@if (alerts.length > 0) {
+  <section class="alert-list">
+    @for (alert of alerts; track alert.id) {
+      <article class="alert-card" [class.unread]="alert.unread">
+        <div class="alert-main">
+          <div class="alert-heading">
+            <span class="level" [class.warning]="alert.level === 'WARNING'" [class.critical]="alert.level === 'CRITICAL'">
+              {{ alert.level }}
+            </span>
+
+            @if (alert.unread) {
+              <span class="unread-badge">
+                {{ 'alerts.unread' | translate }}
+              </span>
+            }
+          </div>
+
+          <h3>{{ alert.title }}</h3>
+          <p>{{ alert.message }}</p>
+
+          <span class="date">
+            {{ alert.createdAt | date: 'yyyy-MM-dd' }}
+          </span>
+        </div>
+
+        @if (alert.unread) {
+          <button
+            type="button"
+            class="read-btn"
+            (click)="markAsRead.emit(alert.id)"
+          >
+            {{ 'alerts.markAsRead' | translate }}
+          </button>
+        }
+      </article>
+    }
+  </section>
+} @else {
+  <article class="empty-state">
+    <h3>{{ 'alerts.emptyTitle' | translate }}</h3>
+    <p>{{ 'alerts.emptyContent' | translate }}</p>
+  </article>
+}

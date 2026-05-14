@@ -1,17 +1,32 @@
-import type { Alert } from '../model/alert.entity';
+import { Injectable } from '@angular/core';
 
+import { Alert, AlertLevel } from '../model/alert.entity';
+
+@Injectable({
+  providedIn: 'root',
+})
 export class AlertPriorityService {
-    sortByPriority(alerts: Alert[]): Alert[] {
-        const priority = {
-            CRITICAL: 3,
-            WARNING: 2,
-            INFO: 1,
-        };
+  sortByPriorityAndDate(alerts: Alert[]): Alert[] {
+    return [...alerts].sort((first, second) => {
+      const levelDifference =
+        this.getLevelWeight(second.level) - this.getLevelWeight(first.level);
 
-        return [...alerts].sort((a, b) => priority[b.level] - priority[a.level]);
-    }
+      if (levelDifference !== 0) return levelDifference;
 
-    getUnreadCount(alerts: Alert[]): number {
-        return alerts.filter((alert) => !alert.read).length;
-    }
+      return (
+        new Date(second.createdAt).getTime() -
+        new Date(first.createdAt).getTime()
+      );
+    });
+  }
+
+  private getLevelWeight(level: AlertLevel): number {
+    const weights: Record<AlertLevel, number> = {
+      INFO: 1,
+      WARNING: 2,
+      CRITICAL: 3,
+    };
+
+    return weights[level];
+  }
 }

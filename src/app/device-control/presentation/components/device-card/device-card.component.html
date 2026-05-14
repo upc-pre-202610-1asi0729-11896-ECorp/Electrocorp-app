@@ -1,0 +1,32 @@
+<article class="device-card">
+  <div class="device-header">
+    <div>
+      <p class="device-type">{{ device.type }}</p>
+      <h3>{{ device.name }}</h3>
+      <span>{{ device.room }}</span>
+    </div>
+
+    <span class="status" [class.on]="device.status === 'ON'">
+      {{ device.status }}
+    </span>
+  </div>
+
+  <div class="device-body">
+    <p>{{ 'devices.power' | translate }}</p>
+    <strong>{{ device.powerWatts }}W</strong>
+  </div>
+
+  <div class="device-actions">
+    <button type="button" class="toggle-btn" (click)="onToggle()">
+      @if (device.status === 'ON') {
+        {{ 'devices.turnOff' | translate }}
+      } @else {
+        {{ 'devices.turnOn' | translate }}
+      }
+    </button>
+
+    <button type="button" class="remove-btn" (click)="onRemove()">
+      {{ 'common.delete' | translate }}
+    </button>
+  </div>
+</article>

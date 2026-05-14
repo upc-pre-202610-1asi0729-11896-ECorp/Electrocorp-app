@@ -1,24 +1,31 @@
+import { BaseAssembler } from '../../../shared/infrastructure/assemblers/base.assembler';
 import { Alert } from '../../domain/model/alert.entity';
-import type { AlertResponse } from '../responses/alert.response';
-import type { AlertResource } from '../resources/alert.resource';
+import { AlertResource } from '../resources/alert.resource';
+import { AlertResponse } from '../responses/alert.response';
 
-export class AlertAssembler {
-    static toEntity(response: AlertResponse): Alert {
-        return new Alert({
-            id: response.id,
-            title: response.title,
-            message: response.message,
-            level: response.level,
-            createdAt: response.createdAt,
-            read: response.read,
-        });
-    }
+export class AlertAssembler extends BaseAssembler<
+  Alert,
+  AlertResource,
+  AlertResponse
+> {
+  override toEntity(response: AlertResponse): Alert {
+    return new Alert({
+      id: response.id,
+      title: response.title,
+      message: response.message,
+      level: response.level,
+      createdAt: response.createdAt,
+      read: response.read,
+    });
+  }
 
-    static toResource(alert: Alert): AlertResource {
-        return {
-            title: alert.title,
-            message: alert.message,
-            level: alert.level,
-        };
-    }
+  override toResource(entity: Alert): AlertResource {
+    return {
+      title: entity.title,
+      message: entity.message,
+      level: entity.level,
+      createdAt: entity.createdAt,
+      read: entity.read,
+    };
+  }
 }

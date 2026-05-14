@@ -1,8 +1,9 @@
-export type UserStatusResponse = 'ACTIVE' | 'BLOCKED';
+import { BaseResponse } from '../../../shared/infrastructure/responses/base.response';
+import { UserStatus } from '../../domain/model/user.entity';
 
-export interface UserResponse {
-    id: number;
-    fullName: string;
-    email: string;
-    status: UserStatusResponse;
+export interface UserResponse extends BaseResponse<number> {
+  fullName: string;
+  email: string;
+  password?: string;
+  status: UserStatus;
 }

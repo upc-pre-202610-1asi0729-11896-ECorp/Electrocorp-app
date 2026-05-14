@@ -1,60 +1,177 @@
-import { IamApiEndpoint } from '../../infrastructure/api/iam-api-endpoint';
+import { computed, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
+
+import { AuthSessionService } from '../../../shared/application/services/auth-session.service';
+import { SignInDto } from '../dtos/sign-in.dto';
+import { SignUpDto } from '../dtos/sign-up.dto';
+import { User } from '../../domain/model/user.entity';
+import { AccessProfile } from '../../domain/model/access-profile.entity';
+import { IamApiService } from '../../infrastructure/api/iam-api.service';
 import { UserAssembler } from '../../infrastructure/assemblers/user.assembler';
 import { AccessProfileAssembler } from '../../infrastructure/assemblers/access-profile.assembler';
-import type { SignInDto } from '../dtos/sign-in.dto';
-import type { SignUpDto } from '../dtos/sign-up.dto';
-import type { User } from '../../domain/model/user.entity';
-import type { AccessProfile } from '../../domain/model/access-profile.entity';
 
+@Injectable({
+  providedIn: 'root',
+})
 export class IamFacade {
-    private readonly iamApi = new IamApiEndpoint();
+  private readonly userAssembler = new UserAssembler();
+  private readonly accessProfileAssembler = new AccessProfileAssembler();
 
-    async signIn(payload: SignInDto): Promise<{
-        user: User;
-        accessProfiles: AccessProfile[];
-    }> {
-        const response = await this.iamApi.signIn({
-            email: payload.email,
-            password: payload.password,
-        });
+  private readonly currentUserSignal = signal<User | null>(null);
+  private readonly accessProfilesSignal = signal<AccessProfile[]>([]);
+  private readonly loadingSignal = signal<boolean>(false);
+  private readonly errorSignal = signal<string | null>(null);
 
-        return {
-            user: UserAssembler.toEntity(response.user),
-            accessProfiles: response.accessProfiles.map(AccessProfileAssembler.toEntity),
-        };
+  readonly currentUser = computed(() => this.currentUserSignal());
+  readonly accessProfiles = computed(() => this.accessProfilesSignal());
+  readonly loading = computed(() => this.loadingSignal());
+  readonly error = computed(() => this.errorSignal());
+  readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
+
+  constructor(
+    private readonly iamApi: IamApiService,
+    private readonly authSession: AuthSessionService,
+    private readonly router: Router
+  ) {}
+
+  async signIn(payload: SignInDto): Promise<void> {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+
+    try {
+      const response = await this.iamApi.signIn({
+        email: payload.email,
+        password: payload.password,
+      });
+
+      const user = this.userAssembler.toEntity(response.user);
+      const profiles = response.accessProfiles.map((profile) =>
+        this.accessProfileAssembler.toEntity(profile)
+      );
+
+      this.currentUserSignal.set(user);
+      this.accessProfilesSignal.set(profiles);
+
+      this.authSession.startSession({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      });
+
+      await this.router.navigate(['/home']);
+    } catch (error) {
+      console.error(error);
+      this.errorSignal.set('auth.signInError');
+    } finally {
+      this.loadingSignal.set(false);
     }
+  }
 
-    async signUp(payload: SignUpDto): Promise<{
-        user: User;
-        accessProfiles: AccessProfile[];
-    }> {
-        const response = await this.iamApi.signUp({
-            fullName: payload.fullName,
-            email: payload.email,
-            password: payload.password,
-        });
+  async signUp(payload: SignUpDto): Promise<void> {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
 
-        return {
-            user: UserAssembler.toEntity(response.user),
-            accessProfiles: response.accessProfiles.map(AccessProfileAssembler.toEntity),
-        };
+    try {
+      const normalizedEmail = payload.email.trim().toLowerCase();
+      const password = payload.password.trim();
+      const fullName = payload.fullName.trim();
+
+      if (!fullName) {
+        this.errorSignal.set('auth.fullNameRequired');
+        return;
+      }
+
+      if (!this.isValidEmail(normalizedEmail)) {
+        this.errorSignal.set('auth.invalidEmail');
+        return;
+      }
+
+      if (!this.isAllowedEmailProvider(normalizedEmail)) {
+        this.errorSignal.set('auth.invalidEmailProvider');
+        return;
+      }
+
+      if (password.length < 8) {
+        this.errorSignal.set('auth.passwordTooShort');
+        return;
+      }
+
+      const response = await this.iamApi.signUp({
+        fullName,
+        email: normalizedEmail,
+        password,
+      });
+
+      const user = this.userAssembler.toEntity(response.user);
+      const profiles = response.accessProfiles.map((profile) =>
+        this.accessProfileAssembler.toEntity(profile)
+      );
+
+      this.currentUserSignal.set(user);
+      this.accessProfilesSignal.set(profiles);
+
+      this.authSession.startSession({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      });
+
+      await this.router.navigate(['/billing/plans']);
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof Error && error.message === 'Email already exists.') {
+        this.errorSignal.set('auth.emailAlreadyExists');
+        return;
+      }
+
+      this.errorSignal.set('auth.signUpError');
+    } finally {
+      this.loadingSignal.set(false);
     }
+  }
 
-    async restoreSession(): Promise<{
-        user: User;
-        accessProfiles: AccessProfile[];
-    } | null> {
-        const response = await this.iamApi.restoreSession();
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
-        if (!response) return null;
+  private isAllowedEmailProvider(email: string): boolean {
+    return (
+      email.endsWith('@gmail.com') ||
+      email.endsWith('@outlook.com') ||
+      email.endsWith('@hotmail.com')
+    );
+  }
 
-        return {
-            user: UserAssembler.toEntity(response.user),
-            accessProfiles: response.accessProfiles.map(AccessProfileAssembler.toEntity),
-        };
+  async restoreSession(): Promise<void> {
+    const email = this.authSession.userEmail();
+
+    if (!email) return;
+
+    try {
+      const response = await this.iamApi.restoreSession(email);
+
+      if (!response) {
+        this.signOut();
+        return;
+      }
+
+      this.currentUserSignal.set(this.userAssembler.toEntity(response.user));
+
+      this.accessProfilesSignal.set(
+        response.accessProfiles.map((profile) =>
+          this.accessProfileAssembler.toEntity(profile)
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      this.signOut();
     }
+  }
 
-    async signOut(): Promise<void> {
-        await this.iamApi.signOut();
-    }
+  signOut(): void {
+    this.currentUserSignal.set(null);
+    this.accessProfilesSignal.set([]);
+    this.authSession.closeSession();
+  }
 }

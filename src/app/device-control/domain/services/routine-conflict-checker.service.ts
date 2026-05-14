@@ -1,11 +1,17 @@
+import { Injectable } from '@angular/core';
 import { Routine } from '../model/routine.entity';
 
+@Injectable({
+  providedIn: 'root',
+})
 export class RoutineConflictCheckerService {
-    hasConflict(newRoutine: Routine, existingRoutines: Routine[]): boolean {
-        return existingRoutines.some((routine) =>
-            routine.deviceId === newRoutine.deviceId &&
-            routine.scheduledTime === newRoutine.scheduledTime &&
-            routine.enabled
-        );
-    }
+  hasConflict(candidate: Routine, routines: Routine[]): boolean {
+    return routines.some(
+      (routine) =>
+        routine.enabled &&
+        candidate.enabled &&
+        routine.deviceId === candidate.deviceId &&
+        routine.scheduledTime === candidate.scheduledTime
+    );
+  }
 }

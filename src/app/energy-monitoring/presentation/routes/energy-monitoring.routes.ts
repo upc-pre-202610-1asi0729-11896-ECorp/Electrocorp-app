@@ -1,25 +1,20 @@
-import type { RouteRecordRaw } from 'vue-router';
+import { Routes } from '@angular/router';
 
-const EnergyDashboardView = () => import('../views/dashboard/EnergyDashboardView.vue');
-const EnergyHistoryView = () => import('../views/history/EnergyHistoryView.vue');
-
-export const energyMonitoringRoutes: RouteRecordRaw[] = [
-    {
-        path: '/energy-monitoring/dashboard',
-        name: 'energy-monitoring-dashboard',
-        component: EnergyDashboardView,
-        meta: {
-            title: 'ElectroCorp - Energy Monitoring',
-            requiresAuth: true,
-        },
-    },
-    {
-        path: '/energy-monitoring/history',
-        name: 'energy-monitoring-history',
-        component: EnergyHistoryView,
-        meta: {
-            title: 'ElectroCorp - Energy History',
-            requiresAuth: true,
-        },
-    },
+export const ENERGY_MONITORING_ROUTES: Routes = [
+  {
+    path: 'energy-monitoring/dashboard',
+    data: { title: 'Energy Dashboard' },
+    loadComponent: () =>
+      import('../pages/dashboard/energy-dashboard-page.component').then(
+        (m) => m.EnergyDashboardPageComponent
+      ),
+  },
+  {
+    path: 'energy-monitoring/history',
+    data: { title: 'Energy History' },
+    loadComponent: () =>
+      import('../pages/history/energy-history-page.component').then(
+        (m) => m.EnergyHistoryPageComponent
+      ),
+  },
 ];

@@ -1,54 +1,51 @@
+import { BaseEntity } from '../../../shared/domain/model/base.entity';
+
 export type RoutineAction = 'TURN_ON' | 'TURN_OFF';
 
-export class Routine {
-    private _id: number;
-    private _name: string;
-    private _deviceId: number;
-    private _action: RoutineAction;
-    private _scheduledTime: string;
-    private _enabled: boolean;
+export class Routine extends BaseEntity<number> {
+  private readonly _name: string;
+  private readonly _deviceId: number;
+  private readonly _action: RoutineAction;
+  private readonly _scheduledTime: string;
+  private _enabled: boolean;
 
-    constructor(props: {
-        id: number;
-        name: string;
-        deviceId: number;
-        action: RoutineAction;
-        scheduledTime: string;
-        enabled?: boolean;
-    }) {
-        this._id = props.id;
-        this._name = props.name;
-        this._deviceId = props.deviceId;
-        this._action = props.action;
-        this._scheduledTime = props.scheduledTime;
-        this._enabled = props.enabled ?? true;
-    }
+  constructor(props: {
+    id: number;
+    name: string;
+    deviceId: number;
+    action: RoutineAction;
+    scheduledTime: string;
+    enabled: boolean;
+  }) {
+    super(props.id);
+    this._name = props.name;
+    this._deviceId = props.deviceId;
+    this._action = props.action;
+    this._scheduledTime = props.scheduledTime;
+    this._enabled = props.enabled;
+  }
 
-    get id(): number {
-        return this._id;
-    }
+  get name(): string {
+    return this._name;
+  }
 
-    get name(): string {
-        return this._name;
-    }
+  get deviceId(): number {
+    return this._deviceId;
+  }
 
-    get deviceId(): number {
-        return this._deviceId;
-    }
+  get action(): RoutineAction {
+    return this._action;
+  }
 
-    get action(): RoutineAction {
-        return this._action;
-    }
+  get scheduledTime(): string {
+    return this._scheduledTime;
+  }
 
-    get scheduledTime(): string {
-        return this._scheduledTime;
-    }
+  get enabled(): boolean {
+    return this._enabled;
+  }
 
-    get enabled(): boolean {
-        return this._enabled;
-    }
-
-    toggleEnabled(): void {
-        this._enabled = !this._enabled;
-    }
+  toggleEnabled(): void {
+    this._enabled = !this._enabled;
+  }
 }

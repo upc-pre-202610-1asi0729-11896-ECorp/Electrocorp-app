@@ -1,50 +1,52 @@
-import type { PlanCode } from './plan.entity';
+import { BaseEntity } from '../../../shared/domain/model/base.entity';
+import { PlanCode } from './plan.entity';
 
 export type SubscriptionStatus = 'ACTIVE' | 'CANCELED';
 
-export class Subscription {
-    private readonly _id: number;
-    private readonly _planCode: PlanCode;
-    private _status: SubscriptionStatus;
-    private readonly _startedAt: string;
-    private _endsAt: string | null;
+export class Subscription extends BaseEntity<number> {
+  private readonly _userId: number;
+  private readonly _planCode: PlanCode;
+  private readonly _status: SubscriptionStatus;
+  private readonly _startedAt: string;
+  private readonly _endsAt: string | null;
 
-    constructor(props: {
-        id: number;
-        planCode: PlanCode;
-        status?: SubscriptionStatus;
-        startedAt: string;
-        endsAt?: string | null;
-    }) {
-        this._id = props.id;
-        this._planCode = props.planCode;
-        this._status = props.status ?? 'ACTIVE';
-        this._startedAt = props.startedAt;
-        this._endsAt = props.endsAt ?? null;
-    }
+  constructor(props: {
+    id: number;
+    userId: number;
+    planCode: PlanCode;
+    status: SubscriptionStatus;
+    startedAt: string;
+    endsAt: string | null;
+  }) {
+    super(props.id);
+    this._userId = props.userId;
+    this._planCode = props.planCode;
+    this._status = props.status;
+    this._startedAt = props.startedAt;
+    this._endsAt = props.endsAt;
+  }
 
-    get id(): number {
-        return this._id;
-    }
+  get userId(): number {
+    return this._userId;
+  }
 
-    get planCode(): PlanCode {
-        return this._planCode;
-    }
+  get planCode(): PlanCode {
+    return this._planCode;
+  }
 
-    get status(): SubscriptionStatus {
-        return this._status;
-    }
+  get status(): SubscriptionStatus {
+    return this._status;
+  }
 
-    get startedAt(): string {
-        return this._startedAt;
-    }
+  get startedAt(): string {
+    return this._startedAt;
+  }
 
-    get endsAt(): string | null {
-        return this._endsAt;
-    }
+  get endsAt(): string | null {
+    return this._endsAt;
+  }
 
-    cancel(endsAt: string): void {
-        this._status = 'CANCELED';
-        this._endsAt = endsAt;
-    }
+  get isActive(): boolean {
+    return this._status === 'ACTIVE';
+  }
 }

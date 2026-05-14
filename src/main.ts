@@ -1,14 +1,10 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import App from './App.vue';
-import router from './router';
-import { i18n } from './i18n';
-import './styles/main.scss';
+import 'zone.js';
+import './assets/load-fonts.js';
 
-const app = createApp(App);
+import { bootstrapApplication } from '@angular/platform-browser';
 
-app.use(createPinia());
-app.use(router);
-app.use(i18n);
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
 
-app.mount('#app');
+bootstrapApplication(App, appConfig)
+  .catch((err) => console.error(err));

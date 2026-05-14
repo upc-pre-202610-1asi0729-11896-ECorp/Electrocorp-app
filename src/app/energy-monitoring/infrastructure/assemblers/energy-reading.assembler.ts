@@ -1,22 +1,35 @@
-import { EnergyReading } from '../../domain/model/energy-reading.entity';
-import type { EnergyReadingResponse } from '../responses/energy-reading.response';
-import type { EnergyReadingResource } from '../resources/energy-reading.resource';
+import { BaseAssembler } from '../../../shared/infrastructure/assemblers/base.assembler';
+import {
+  EnergyReading,
+  EnergyReadingStatus,
+} from '../../domain/model/energy-reading.entity';
+import { EnergyReadingResource } from '../resources/energy-reading.resource';
+import { EnergyReadingResponse } from '../responses/energy-reading.response';
 
-export class EnergyReadingAssembler {
-    static toEntity(response: EnergyReadingResponse): EnergyReading {
-        return new EnergyReading({
-            id: response.id,
-            deviceName: response.deviceName,
-            watts: response.watts,
-            recordedAt: response.recordedAt,
-        });
-    }
+export class EnergyReadingAssembler extends BaseAssembler<
+  EnergyReading,
+  EnergyReadingResource,
+  EnergyReadingResponse
+> {
+  override toEntity(response: EnergyReadingResponse): EnergyReading {
+    const status: EnergyReadingStatus =
+      response.status ?? (response.watts >= 120 ? 'HIGH' : 'NORMAL');
 
-    static toResource(entity: EnergyReading): EnergyReadingResource {
-        return {
-            deviceName: entity.deviceName,
-            watts: entity.watts,
-            recordedAt: entity.recordedAt,
-        };
-    }
+    return new EnergyReading({
+      id: response.id,
+      deviceName: response.deviceName,
+      watts: response.watts,
+      recordedAt: response.recordedAt,
+      status,
+    });
+  }
+
+  override toResource(entity: EnergyReading): EnergyReadingResource {
+    return {
+      deviceName: entity.deviceName,
+      watts: entity.watts,
+      recordedAt: entity.recordedAt,
+      status: entity.status,
+    };
+  }
 }
