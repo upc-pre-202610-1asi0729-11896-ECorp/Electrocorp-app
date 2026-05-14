@@ -1,0 +1,220 @@
+<section class="reporting-page">
+  <article class="hero-card">
+    <div>
+      <p class="eyebrow">{{ 'reporting.reportsEyebrow' | translate }}</p>
+      <h1>{{ 'reporting.reportsTitle' | translate }}</h1>
+      <p>{{ 'reporting.reportsSubtitle' | translate }}</p>
+    </div>
+
+    <button
+      type="button"
+      class="primary-action-btn"
+      (click)="openGenerateForm()"
+    >
+      {{ 'reporting.generateReport' | translate }}
+    </button>
+  </article>
+
+  @if (showGenerateForm) {
+    <article class="form-card">
+      <div class="form-header">
+        <div>
+          <p class="eyebrow">{{ 'reporting.newReport' | translate }}</p>
+          <h2>{{ 'reporting.generateConsumptionReport' | translate }}</h2>
+          <p>{{ 'reporting.generateReportDescription' | translate }}</p>
+        </div>
+
+        <button
+          type="button"
+          class="secondary-action-btn"
+          (click)="closeGenerateForm()"
+        >
+          {{ 'common.cancel' | translate }}
+        </button>
+      </div>
+
+      <form class="report-form" (ngSubmit)="handleGenerateReport()">
+        <label>
+          {{ 'reporting.startDate' | translate }}
+          <input
+            type="date"
+            name="startDate"
+            [(ngModel)]="startDate"
+            [max]="today"
+            required
+          />
+        </label>
+
+        <label>
+          {{ 'reporting.endDate' | translate }}
+          <input
+            type="date"
+            name="endDate"
+            [(ngModel)]="endDate"
+            [max]="today"
+            required
+          />
+        </label>
+
+        <button
+          type="submit"
+          class="primary-action-btn submit-btn"
+          [disabled]="reportingFacade.loading()"
+        >
+          @if (reportingFacade.loading()) {
+            {{ 'reporting.generating' | translate }}
+          } @else {
+            {{ 'reporting.saveReport' | translate }}
+          }
+        </button>
+      </form>
+    </article>
+  }
+
+  @if (reportingFacade.loading()) {
+    <article class="card">
+      <p>{{ 'reporting.loadingReports' | translate }}</p>
+    </article>
+  } @else if (reportingFacade.error()) {
+    <article class="card error-card">
+      <p>{{ reportingFacade.error()! | translate }}</p>
+    </article>
+  } @else {
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span>{{ 'reporting.reports' | translate }}</span>
+        <strong>{{ reportingFacade.totalReports() }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>{{ 'reporting.totalWatts' | translate }}</span>
+        <strong>{{ reportingFacade.totalWattsReported() }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>{{ 'reporting.highestReading' | translate }}</span>
+        <strong>{{ reportingFacade.highestReading() }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>{{ 'reporting.averagePerReport' | translate }}</span>
+        <strong>{{ reportingFacade.averageReportWatts() }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <span>{{ 'reporting.criticalReports' | translate }}</span>
+        <strong>{{ reportingFacade.criticalReports() }}</strong>
+      </article>
+    </section>
+
+    @if (!reportingFacade.reports().length) {
+      <article class="empty-card">
+        <h2>{{ 'reporting.emptyReportsTitle' | translate }}</h2>
+        <p>{{ 'reporting.emptyReportsDescription' | translate }}</p>
+      </article>
+    } @else {
+      <section class="insight-grid">
+        <article class="card">
+          <div class="section-header">
+            <p class="eyebrow">{{ 'reporting.insight' | translate }}</p>
+            <h2>{{ 'reporting.highestConsumptionPeriod' | translate }}</h2>
+          </div>
+
+          <div class="highlight-box">
+            <strong>{{ reportingFacade.strongestReport()?.period }}</strong>
+
+            <span>
+              {{ reportingFacade.strongestReport()?.totalWatts ?? 0 }}
+              {{ 'reporting.totalWatts' | translate }}
+            </span>
+
+            <p>{{ reportingFacade.strongestReport()?.recommendation }}</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="section-header">
+            <p class="eyebrow">{{ 'reporting.trend' | translate }}</p>
+            <h2>{{ 'reporting.reportsComparison' | translate }}</h2>
+          </div>
+
+          <div class="trend-list">
+            @for (report of reportingFacade.reportsSorted(); track report.id) {
+              <div class="trend-item">
+                <div class="trend-meta">
+                  <span>{{ report.period }}</span>
+                  <strong>{{ report.totalWatts }}</strong>
+                </div>
+
+                <div class="trend-bar-track">
+                  <div
+                    class="trend-bar-fill"
+                    [style.width.%]="
+                      (report.totalWatts /
+                        reportingFacade.maxReportTotalWatts()) *
+                      100
+                    "
+                  ></div>
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      </section>
+
+      <section class="report-grid">
+        @for (report of reportingFacade.reportsSorted(); track report.id) {
+          <article class="report-card">
+            <div class="report-header">
+              <div>
+                <p class="eyebrow">{{ report.period }}</p>
+
+                <h2>
+                  {{ 'reporting.issuedReport' | translate }} #{{ report.id }}
+                </h2>
+              </div>
+
+              <span
+                class="status-badge"
+                [class.critical]="report.highestReading >= 1000"
+                [class.warning]="
+                  report.highestReading >= 500 && report.highestReading < 1000
+                "
+                [class.normal]="report.highestReading < 500"
+              >
+                {{
+                  report.highestReading >= 1000
+                    ? ('reporting.critical' | translate)
+                    : report.highestReading >= 500
+                      ? ('reporting.high' | translate)
+                      : ('reporting.normal' | translate)
+                }}
+              </span>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <span>{{ 'reporting.totalWatts' | translate }}</span>
+                <strong>{{ report.totalWatts }}</strong>
+              </div>
+
+              <div>
+                <span>{{ 'reporting.averageWatts' | translate }}</span>
+                <strong>{{ report.averageWatts }}</strong>
+              </div>
+
+              <div>
+                <span>{{ 'reporting.highestReading' | translate }}</span>
+                <strong>{{ report.highestReading }}</strong>
+              </div>
+            </div>
+
+            <p class="recommendation">
+              {{ report.recommendation }}
+            </p>
+          </article>
+        }
+      </section>
+    }
+  }
+</section>
