@@ -1,125 +1,419 @@
 /* =========================================================
    ElectroCorp - app.js
-   Lógica de UI: navegación, dispositivos, modal, toast, charts
+   Funcionalidades: i18n (ES/EN/PT), tema claro/oscuro,
+   CRUD de dispositivos con búsqueda, historial dinámico
+   con export CSV, charts en vivo, persistencia localStorage,
+   reloj y atajos de teclado.
    ========================================================= */
 
-/* ---------- Navegación entre secciones ---------- */
+/* ============ I18N ============ */
+const I18N = {
+    es: {
+        'app.title': 'ElectroCorp',
+        'topbar.welcome': 'Bienvenido',
+        'menu.centro': 'Centro Energético',
+        'menu.analitica': 'Analítica',
+        'menu.dispositivos': 'Dispositivos',
+        'menu.historial': 'Historial',
+        'menu.insights': 'IA Energética',
+        'centro.title': 'Centro Energético',
+        'centro.monthly': 'Consumo mensual',
+        'centro.cost': 'Gasto estimado',
+        'centro.saving': 'Ahorro',
+        'centro.devices': 'Dispositivos',
+        'centro.addConsumption': 'Agregar consumo',
+        'centro.simulate': 'Simular semana',
+        'analitica.title': 'Analítica Avanzada',
+        'analitica.peak': 'Hora pico',
+        'analitica.topDay': 'Día mayor consumo',
+        'analitica.avg': 'Promedio diario',
+        'analitica.forecast': 'Predicción',
+        'dispositivos.title': 'Dispositivos',
+        'dispositivos.search': 'Buscar dispositivo...',
+        'dispositivos.add': 'Agregar',
+        'dispositivos.colName': 'Dispositivo',
+        'dispositivos.colState': 'Estado',
+        'dispositivos.colAction': 'Acción',
+        'dispositivos.activate': 'Activar',
+        'dispositivos.deactivate': 'Desactivar',
+        'dispositivos.delete': 'Eliminar',
+        'dispositivos.activated': 'Activado',
+        'dispositivos.deactivated': 'Desactivado',
+        'dispositivos.promptName': 'Nombre del dispositivo:',
+        'historial.title': 'Historial',
+        'historial.subtitle': 'Últimos registros',
+        'historial.export': 'Exportar CSV',
+        'historial.clear': 'Limpiar',
+        'historial.empty': 'Sin registros',
+        'insights.title': 'IA Energética',
+        'modal.title': 'Nuevo Consumo',
+        'modal.cancel': 'Cancelar',
+        'modal.save': 'Guardar',
+        'days.mon': 'Lun', 'days.tue': 'Mar', 'days.wed': 'Mié',
+        'days.thu': 'Jue', 'days.fri': 'Vie', 'days.sat': 'Sáb', 'days.sun': 'Dom',
+        'msg.saved': 'Consumo de {v} kWh registrado',
+        'msg.invalid': 'Ingresa un valor válido',
+        'msg.langChanged': 'Idioma cambiado a Español',
+        'msg.themeLight': 'Tema claro activado',
+        'msg.themeDark': 'Tema oscuro activado',
+        'msg.deleted': '{n} eliminado',
+        'msg.added': '{n} agregado',
+        'msg.cleared': 'Historial limpiado',
+        'msg.simulated': 'Datos simulados',
+        'insight.1': '⚠️ Consumo elevado detectado en horas pico',
+        'insight.2': '💡 Reduce el aire acondicionado 2°C para ahorrar 12%',
+        'insight.3': '✅ Ahorro proyectado de S/ 35 este mes',
+        'insight.4': '🔋 Tu refrigeradora consume más que el promedio'
+    },
+    en: {
+        'app.title': 'ElectroCorp',
+        'topbar.welcome': 'Welcome',
+        'menu.centro': 'Energy Hub',
+        'menu.analitica': 'Analytics',
+        'menu.dispositivos': 'Devices',
+        'menu.historial': 'History',
+        'menu.insights': 'AI Energy',
+        'centro.title': 'Energy Hub',
+        'centro.monthly': 'Monthly usage',
+        'centro.cost': 'Estimated cost',
+        'centro.saving': 'Savings',
+        'centro.devices': 'Devices',
+        'centro.addConsumption': 'Add usage',
+        'centro.simulate': 'Simulate week',
+        'analitica.title': 'Advanced Analytics',
+        'analitica.peak': 'Peak hour',
+        'analitica.topDay': 'Top usage day',
+        'analitica.avg': 'Daily average',
+        'analitica.forecast': 'Forecast',
+        'dispositivos.title': 'Devices',
+        'dispositivos.search': 'Search device...',
+        'dispositivos.add': 'Add',
+        'dispositivos.colName': 'Device',
+        'dispositivos.colState': 'State',
+        'dispositivos.colAction': 'Action',
+        'dispositivos.activate': 'Turn on',
+        'dispositivos.deactivate': 'Turn off',
+        'dispositivos.delete': 'Delete',
+        'dispositivos.activated': 'On',
+        'dispositivos.deactivated': 'Off',
+        'dispositivos.promptName': 'Device name:',
+        'historial.title': 'History',
+        'historial.subtitle': 'Recent records',
+        'historial.export': 'Export CSV',
+        'historial.clear': 'Clear',
+        'historial.empty': 'No records',
+        'insights.title': 'AI Energy',
+        'modal.title': 'New Usage',
+        'modal.cancel': 'Cancel',
+        'modal.save': 'Save',
+        'days.mon': 'Mon', 'days.tue': 'Tue', 'days.wed': 'Wed',
+        'days.thu': 'Thu', 'days.fri': 'Fri', 'days.sat': 'Sat', 'days.sun': 'Sun',
+        'msg.saved': 'Usage of {v} kWh recorded',
+        'msg.invalid': 'Enter a valid value',
+        'msg.langChanged': 'Language changed to English',
+        'msg.themeLight': 'Light theme enabled',
+        'msg.themeDark': 'Dark theme enabled',
+        'msg.deleted': '{n} deleted',
+        'msg.added': '{n} added',
+        'msg.cleared': 'History cleared',
+        'msg.simulated': 'Data simulated',
+        'insight.1': '⚠️ High usage detected at peak hours',
+        'insight.2': '💡 Lower AC by 2°C to save 12%',
+        'insight.3': '✅ Projected savings of S/ 35 this month',
+        'insight.4': '🔋 Your fridge uses more than average'
+    },
+    pt: {
+        'app.title': 'ElectroCorp',
+        'topbar.welcome': 'Bem-vindo',
+        'menu.centro': 'Centro Energético',
+        'menu.analitica': 'Analítica',
+        'menu.dispositivos': 'Dispositivos',
+        'menu.historial': 'Histórico',
+        'menu.insights': 'IA Energética',
+        'centro.title': 'Centro Energético',
+        'centro.monthly': 'Consumo mensal',
+        'centro.cost': 'Gasto estimado',
+        'centro.saving': 'Economia',
+        'centro.devices': 'Dispositivos',
+        'centro.addConsumption': 'Adicionar consumo',
+        'centro.simulate': 'Simular semana',
+        'analitica.title': 'Analítica Avançada',
+        'analitica.peak': 'Hora pico',
+        'analitica.topDay': 'Dia maior consumo',
+        'analitica.avg': 'Média diária',
+        'analitica.forecast': 'Previsão',
+        'dispositivos.title': 'Dispositivos',
+        'dispositivos.search': 'Buscar dispositivo...',
+        'dispositivos.add': 'Adicionar',
+        'dispositivos.colName': 'Dispositivo',
+        'dispositivos.colState': 'Estado',
+        'dispositivos.colAction': 'Ação',
+        'dispositivos.activate': 'Ativar',
+        'dispositivos.deactivate': 'Desativar',
+        'dispositivos.delete': 'Excluir',
+        'dispositivos.activated': 'Ativado',
+        'dispositivos.deactivated': 'Desativado',
+        'dispositivos.promptName': 'Nome do dispositivo:',
+        'historial.title': 'Histórico',
+        'historial.subtitle': 'Últimos registros',
+        'historial.export': 'Exportar CSV',
+        'historial.clear': 'Limpar',
+        'historial.empty': 'Sem registros',
+        'insights.title': 'IA Energética',
+        'modal.title': 'Novo Consumo',
+        'modal.cancel': 'Cancelar',
+        'modal.save': 'Salvar',
+        'days.mon': 'Seg', 'days.tue': 'Ter', 'days.wed': 'Qua',
+        'days.thu': 'Qui', 'days.fri': 'Sex', 'days.sat': 'Sáb', 'days.sun': 'Dom',
+        'msg.saved': 'Consumo de {v} kWh registrado',
+        'msg.invalid': 'Insira um valor válido',
+        'msg.langChanged': 'Idioma alterado para Português',
+        'msg.themeLight': 'Tema claro ativado',
+        'msg.themeDark': 'Tema escuro ativado',
+        'msg.deleted': '{n} excluído',
+        'msg.added': '{n} adicionado',
+        'msg.cleared': 'Histórico limpo',
+        'msg.simulated': 'Dados simulados',
+        'insight.1': '⚠️ Alto consumo detectado em horários de pico',
+        'insight.2': '💡 Reduza o ar 2°C para economizar 12%',
+        'insight.3': '✅ Economia projetada de S/ 35 este mês',
+        'insight.4': '🔋 Sua geladeira consome mais que a média'
+    }
+};
+
+let currentLang = localStorage.getItem('ec.lang') || 'es';
+
+function t(key, params) {
+    let str = (I18N[currentLang] && I18N[currentLang][key]) || key;
+    if (params) Object.keys(params).forEach(k => { str = str.replace(`{${k}}`, params[k]); });
+    return str;
+}
+
+function applyTranslations() {
+    document.documentElement.lang = currentLang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === currentLang);
+    });
+}
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('ec.lang', lang);
+    applyTranslations();
+    renderDevices();
+    renderHistory();
+    renderInsights();
+    updateChartLabels();
+    notify(t('msg.langChanged'));
+}
+
+/* ============ THEME ============ */
+function applyTheme() {
+    const theme = localStorage.getItem('ec.theme') || 'dark';
+    document.body.classList.toggle('light', theme === 'light');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+    const next = document.body.classList.contains('light') ? 'dark' : 'light';
+    localStorage.setItem('ec.theme', next);
+    applyTheme();
+    notify(next === 'light' ? t('msg.themeLight') : t('msg.themeDark'));
+}
+
+/* ============ NAV ============ */
 function showSection(id, el) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-
     document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active-menu'));
-    el.classList.add('active-menu');
+    if (el) el.classList.add('active-menu');
+    else document.querySelector(`.menu-item[data-section="${id}"]`)?.classList.add('active-menu');
 }
 
-/* ---------- Estado de dispositivos ---------- */
-const devices = {
-    1: { name: 'Refrigeradora',      active: true  },
-    2: { name: 'TV',                  active: true  },
-    3: { name: 'Aire acondicionado',  active: false }
-};
+/* ============ DEVICES ============ */
+let devices = JSON.parse(localStorage.getItem('ec.devices') || 'null') || [
+    { id: 1, name: 'Refrigeradora', active: true },
+    { id: 2, name: 'TV', active: true },
+    { id: 3, name: 'Aire acondicionado', active: false }
+];
+let nextDeviceId = devices.reduce((m, d) => Math.max(m, d.id), 0) + 1;
 
-function toggleDevice(id, buttonId) {
-    const device = devices[id];
-    device.active = !device.active;
+function saveDevices() { localStorage.setItem('ec.devices', JSON.stringify(devices)); }
 
-    const estado = document.getElementById('estado-' + id);
-    const button = document.getElementById(buttonId);
+function renderDevices() {
+    const tbody = document.getElementById('devices-tbody');
+    if (!tbody) return;
+    const q = (document.getElementById('device-search')?.value || '').toLowerCase();
+    const list = devices.filter(d => d.name.toLowerCase().includes(q));
 
-    if (device.active) {
-        estado.innerText = 'Activado';
-        estado.className = 'estado-activo';
+    tbody.innerHTML = list.map(d => `
+        <tr>
+            <td>${escapeHtml(d.name)}</td>
+            <td class="${d.active ? 'estado-activo' : 'estado-inactivo'}">
+                ${d.active ? t('dispositivos.activated') : t('dispositivos.deactivated')}
+            </td>
+            <td>
+                <div class="row-actions">
+                    <button class="${d.active ? 'btn-danger' : 'btn-success'} btn-icon"
+                            onclick="toggleDevice(${d.id})">
+                        ${d.active ? t('dispositivos.deactivate') : t('dispositivos.activate')}
+                    </button>
+                    <button class="btn-ghost btn-icon" onclick="deleteDevice(${d.id})">
+                        🗑
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 
-        button.innerText = 'Desactivar';
-        button.className = 'btn-danger';
-    } else {
-        estado.innerText = 'Desactivado';
-        estado.className = 'estado-inactivo';
+    const statDevices = document.getElementById('stat-devices');
+    if (statDevices) statDevices.textContent = devices.length;
+}
 
-        button.innerText = 'Activar';
-        button.className = 'btn-success';
+function toggleDevice(id) {
+    const d = devices.find(x => x.id === id);
+    if (!d) return;
+    d.active = !d.active;
+    saveDevices();
+    renderDevices();
+    notify(`${d.name}: ${d.active ? t('dispositivos.activated') : t('dispositivos.deactivated')}`);
+}
+
+function deleteDevice(id) {
+    const d = devices.find(x => x.id === id);
+    if (!d) return;
+    devices = devices.filter(x => x.id !== id);
+    saveDevices();
+    renderDevices();
+    notify(t('msg.deleted', { n: d.name }));
+}
+
+function addDevicePrompt() {
+    const name = prompt(t('dispositivos.promptName'));
+    if (!name || !name.trim()) return;
+    const d = { id: nextDeviceId++, name: name.trim(), active: true };
+    devices.push(d);
+    saveDevices();
+    renderDevices();
+    notify(t('msg.added', { n: d.name }));
+}
+
+/* ============ HISTORY ============ */
+let history = JSON.parse(localStorage.getItem('ec.history') || 'null') || [
+    { day: 'Hoy',     value: 12 },
+    { day: 'Ayer',    value: 10 },
+    { day: 'Lunes',   value: 14 },
+    { day: 'Domingo', value: 9  },
+    { day: 'Sábado',  value: 11 }
+];
+function saveHistory() { localStorage.setItem('ec.history', JSON.stringify(history)); }
+
+function renderHistory() {
+    const ul = document.getElementById('history-list');
+    if (!ul) return;
+    if (!history.length) {
+        ul.innerHTML = `<li><span>${t('historial.empty')}</span></li>`;
+        return;
     }
-
-    notify(`${device.name} ${device.active ? 'activado' : 'desactivado'}`);
+    ul.innerHTML = history.map(h => `
+        <li><span>${escapeHtml(h.day)}</span><strong>${h.value} kWh</strong></li>
+    `).join('');
 }
 
-/* ---------- Modal ---------- */
-function openModal() {
-    document.getElementById('modal').classList.add('open');
+function exportHistoryCSV() {
+    const rows = [['day', 'kWh'], ...history.map(h => [h.day, h.value])];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'historial.csv'; a.click();
+    URL.revokeObjectURL(url);
 }
+
+function clearHistory() {
+    history = [];
+    saveHistory();
+    renderHistory();
+    notify(t('msg.cleared'));
+}
+
+/* ============ INSIGHTS ============ */
+function renderInsights() {
+    const el = document.getElementById('insights-list');
+    if (!el) return;
+    el.innerHTML = ['insight.1', 'insight.2', 'insight.3', 'insight.4']
+        .map(k => `<div class="insight">${t(k)}</div>`).join('');
+}
+
+/* ============ MODAL ============ */
+function openModal() { document.getElementById('modal').classList.add('open'); }
 
 function closeModal(save) {
     const modal = document.getElementById('modal');
     const input = document.getElementById('kwh-input');
 
     if (save) {
-        const value = input.value;
-        if (!value) {
-            notify('Ingresa un valor válido', true);
-            return;
-        }
-        notify(`Consumo de ${value} kWh registrado`);
+        const value = parseFloat(input.value);
+        if (!value || value <= 0) { notify(t('msg.invalid'), true); return; }
+        history.unshift({ day: new Date().toLocaleDateString(), value });
+        saveHistory();
+        renderHistory();
+        addPointToLineChart(value);
+        notify(t('msg.saved', { v: value }));
     }
-
     input.value = '';
     modal.classList.remove('open');
 }
 
-/* ---------- Toast ---------- */
+/* ============ TOAST ============ */
 let toastTimer;
 function notify(message, isError) {
-    const t = document.getElementById('toast');
-    t.innerText = message || 'Acción realizada';
-    t.style.background = isError
+    const toastEl = document.getElementById('toast');
+    toastEl.textContent = message || 'OK';
+    toastEl.style.background = isError
         ? 'linear-gradient(45deg, #ef4444, #f87171)'
         : 'linear-gradient(45deg, #22c55e, #4ade80)';
-    t.classList.add('show');
-
+    toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
 }
 
-/* ---------- Gráficos (Chart.js) ---------- */
-const chartTextColor = '#f1f5f9';
-const chartGridColor = 'rgba(255,255,255,0.08)';
-const chartMutedColor = '#94a3b8';
+/* ============ CHARTS ============ */
+const chartTextColor = () => document.body.classList.contains('light') ? '#0f172a' : '#f1f5f9';
+const chartGridColor = () => document.body.classList.contains('light') ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.08)';
+let lineChart, barChart;
 
-const commonScales = {
-    x: { ticks: { color: chartMutedColor }, grid: { color: chartGridColor } },
-    y: { ticks: { color: chartMutedColor }, grid: { color: chartGridColor } }
-};
+function dayLabels() {
+    return ['days.mon','days.tue','days.wed','days.thu','days.fri','days.sat','days.sun'].map(t);
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    /* Línea - consumo semanal */
+function buildCharts() {
     const lineCtx = document.getElementById('chart');
     if (lineCtx) {
-        new Chart(lineCtx, {
+        lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                labels: dayLabels(),
                 datasets: [{
-                    label: 'Consumo (kWh)',
+                    label: 'kWh',
                     data: [12, 19, 10, 15, 14, 9, 11],
                     borderColor: '#38bdf8',
                     backgroundColor: 'rgba(56,189,248,0.2)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#38bdf8'
+                    tension: 0.4, fill: true, pointBackgroundColor: '#38bdf8'
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: chartTextColor } } },
-                scales: commonScales
-            }
+            options: chartOptions()
         });
     }
-
-    /* Barras - consumo por dispositivo */
     const barCtx = document.getElementById('chartBar');
     if (barCtx) {
-        new Chart(barCtx, {
+        barChart = new Chart(barCtx, {
             type: 'bar',
             data: {
                 labels: ['TV', 'Refri', 'AC', 'Laptop'],
@@ -127,20 +421,83 @@ document.addEventListener('DOMContentLoaded', () => {
                     label: 'kWh',
                     data: [40, 120, 60, 30],
                     backgroundColor: [
-                        'rgba(56,189,248,0.8)',
-                        'rgba(125,211,252,0.8)',
-                        'rgba(34,197,94,0.8)',
-                        'rgba(245,158,11,0.8)'
+                        'rgba(56,189,248,0.8)','rgba(125,211,252,0.8)',
+                        'rgba(34,197,94,0.8)','rgba(245,158,11,0.8)'
                     ],
                     borderRadius: 8
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: chartTextColor } } },
-                scales: commonScales
-            }
+            options: chartOptions()
         });
     }
+}
+
+function chartOptions() {
+    return {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: chartTextColor() } } },
+        scales: {
+            x: { ticks: { color: chartTextColor() }, grid: { color: chartGridColor() } },
+            y: { ticks: { color: chartTextColor() }, grid: { color: chartGridColor() } }
+        }
+    };
+}
+
+function updateChartLabels() {
+    if (lineChart) { lineChart.data.labels = dayLabels(); lineChart.update(); }
+    [lineChart, barChart].forEach(c => {
+        if (!c) return;
+        c.options = chartOptions();
+        c.update();
+    });
+}
+
+function addPointToLineChart(value) {
+    if (!lineChart) return;
+    lineChart.data.datasets[0].data.push(value);
+    lineChart.data.datasets[0].data.shift();
+    lineChart.update();
+}
+
+function randomizeChart() {
+    if (!lineChart) return;
+    lineChart.data.datasets[0].data = Array.from({length: 7}, () => Math.round(5 + Math.random() * 20));
+    lineChart.update();
+    notify(t('msg.simulated'));
+}
+
+/* ============ CLOCK ============ */
+function startClock() {
+    const el = document.getElementById('clock');
+    if (!el) return;
+    const tick = () => { el.textContent = new Date().toLocaleTimeString(); };
+    tick(); setInterval(tick, 1000);
+}
+
+/* ============ HELPERS ============ */
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => (
+        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+    ));
+}
+
+/* ============ KEYBOARD ============ */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('modal')?.classList.remove('open');
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        showSection('dispositivos');
+        document.getElementById('device-search')?.focus();
+    }
+});
+
+/* ============ INIT ============ */
+document.addEventListener('DOMContentLoaded', () => {
+    applyTheme();
+    applyTranslations();
+    buildCharts();
+    renderDevices();
+    renderHistory();
+    renderInsights();
+    startClock();
 });
