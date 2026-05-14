@@ -1,0 +1,158 @@
+### =========================================
+### ELECTROCORP API TESTS
+### Base URL
+### =========================================
+
+@baseUrl = http://localhost:8080
+@ownerId = 11111111-1111-1111-1111-111111111111
+
+
+### =========================================
+### HEALTH CHECK SIMPLE
+### =========================================
+
+GET {{baseUrl}}/api/devices
+Accept: application/json
+
+
+### =========================================
+### DEVICES
+### =========================================
+
+### 1) Obtener todos los dispositivos
+GET {{baseUrl}}/api/devices
+Accept: application/json
+
+
+### 2) Crear dispositivo 1
+POST {{baseUrl}}/api/devices
+Content-Type: application/json
+Accept: application/json
+
+{
+  "ownerId": "{{ownerId}}",
+  "name": "Refrigeradora",
+  "code": "DEV-001",
+  "type": "SMART_PLUG"
+}
+
+
+### 3) Crear dispositivo 2
+POST {{baseUrl}}/api/devices
+Content-Type: application/json
+Accept: application/json
+
+{
+  "ownerId": "{{ownerId}}",
+  "name": "Aire acondicionado",
+  "code": "DEV-002",
+  "type": "SMART_SWITCH"
+}
+
+
+### 4) Crear dispositivo 3
+POST {{baseUrl}}/api/devices
+Content-Type: application/json
+Accept: application/json
+
+{
+  "ownerId": "{{ownerId}}",
+  "name": "Router principal",
+  "code": "DEV-003",
+  "type": "SENSOR"
+}
+
+
+### 5) Volver a listar dispositivos
+GET {{baseUrl}}/api/devices
+Accept: application/json
+
+
+### =========================================
+### IMPORTANTE:
+### Copia aquí el id real de un device creado
+### después de ejecutar el POST de arriba
+### =========================================
+
+@deviceId = REEMPLAZA_AQUI_EL_UUID_REAL
+
+
+### 6) Encender dispositivo
+PUT {{baseUrl}}/api/devices/{{deviceId}}/turn-on
+Accept: application/json
+
+
+### 7) Apagar dispositivo
+PUT {{baseUrl}}/api/devices/{{deviceId}}/turn-off
+Accept: application/json
+
+
+### 8) Renombrar dispositivo
+PUT {{baseUrl}}/api/devices/{{deviceId}}/rename
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Refrigeradora Cocina"
+}
+
+
+### 9) Programar horario para dispositivo
+POST {{baseUrl}}/api/devices/{{deviceId}}/schedule
+Content-Type: application/json
+Accept: application/json
+
+{
+  "executeAt": "18:30",
+  "turnOn": true
+}
+
+
+### 10) Eliminar dispositivo
+DELETE {{baseUrl}}/api/devices/{{deviceId}}
+Accept: application/json
+
+
+### =========================================
+### ENERGY READINGS
+### =========================================
+
+### 11) Obtener todas las lecturas
+GET {{baseUrl}}/api/energy/readings
+Accept: application/json
+
+
+### 12) Registrar lectura energética
+POST {{baseUrl}}/api/energy/readings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "deviceId": "{{deviceId}}",
+  "amount": 10.5
+}
+
+
+### 13) Registrar otra lectura energética
+POST {{baseUrl}}/api/energy/readings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "deviceId": "{{deviceId}}",
+  "amount": 7.25
+}
+
+
+### 14) Volver a listar lecturas
+GET {{baseUrl}}/api/energy/readings
+Accept: application/json
+
+
+### =========================================
+### ENERGY RECOMMENDATIONS
+### =========================================
+
+### 15) Obtener recomendaciones
+GET {{baseUrl}}/api/energy/recommendations
+Accept: application/json
